@@ -11,7 +11,7 @@
 #  Each lines executes a specific R script present in .                  #
 #                                                                        #
 #------------------------------------------------------------------------#
-
+Salut !
 # Choose your working directory for LaTeX images and R scripts -----
 wd="C:/Users/ordinateur/ownCloud/COGEDIV/ARTICLE/Genetic_diversity_LHT"
 setwd(wd)
