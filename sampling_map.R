@@ -4,7 +4,7 @@
 #                                                                        #
 #------------------------------------------------------------------------#
 
-Salut !
+
 # Load packages ----
 library(oceanmap)
 library(rgdal)
