@@ -9,6 +9,7 @@ library(ade4)
 library(ggrepel)
 library(viridis)
 time_code=0
+# Afhsjksdf
 ## Function -----
 test_slope_different_1=function(fit=fit){
   # get from : https://stackoverflow.com/questions/33060601/test-if-the-slope-in-simple-linear-regression-equals-to-a-given-constant-in-r
