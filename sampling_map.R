@@ -6,15 +6,10 @@
 
 
 # Load packages ----
-library(oceanmap)
-library(rgdal)
 library(png)
-library(openxlsx)
-library(readxl)
 library(RColorBrewer)
 library(ggplot2)
 library("rnaturalearth")
-library("rnaturalearthdata")
 library(sf)
 library(ggsn)
 
@@ -203,88 +198,5 @@ for (j in 1:length(levels(sites$sp))){
 
 names(p)=levels(sites$sp)
 species_map<-p
-
-# Map each location ----
-lon <- c (3.25, 4.15)
-lat <- c (43.15, 43.65)
-gulf_of_lion<-ggplot(data = world) +
-  geom_sf(fill="grey") +
-  geom_sf(data = sites, size = 1, shape = 19, aes(col = loc)) +
-  coord_sf(xlim = lon, ylim = lat, expand = FALSE)+
-  theme(panel.grid.major = element_blank(),
-        panel.background = element_rect(fill = "transparent"),
-        panel.border = element_rect(fill = NA),
-        legend.position = "none",
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.text.y=element_blank(),
-        axis.ticks.y=element_blank()
-  )
-
-lon <- c (-1.5, -0.15)
-lat <- c (37.5,38.25)
-mar_menor<-ggplot(data = world) +
-  geom_sf(fill="grey") +
-  geom_sf(data = sites, size = 1, shape = 19, aes(col = loc)) +
-  coord_sf(xlim = lon, ylim = lat, expand = FALSE)+
-  theme(panel.grid.major = element_blank(),
-        panel.background = element_rect(fill = "transparent"),
-        panel.border = element_rect(fill = NA),
-        legend.position = "none",
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.text.y=element_blank(),
-        axis.ticks.y=element_blank()
-  )
-
-lon <- c (-9, -7.75)
-lat <- c (36.75,37.25)
-algarve<-ggplot(data = world) +
-  geom_sf(fill="grey") +
-  geom_sf(data = sites, size = 1, shape = 19, aes(col = loc)) +
-  coord_sf(xlim = lon, ylim = lat, expand = FALSE)+
-  theme(panel.grid.major = element_blank(),
-        panel.background = element_rect(fill = "transparent"),
-        panel.border = element_rect(fill = NA),
-        legend.position = "none",
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.text.y=element_blank(),
-        axis.ticks.y=element_blank()
-  )
-
-lon <- c (-2.25, -1)
-lat <- c (43.25,44.75)
-bay_of_biscay<-ggplot(data = world) +
-  geom_sf(fill="grey") +
-  geom_sf(data = sites, size = 2, shape = 19, aes(col = loc)) +
-  coord_sf(xlim = lon, ylim = lat, expand = FALSE)+
-  theme(panel.grid.major = element_blank(),
-        panel.background = element_rect(fill = "transparent"),
-        panel.border = element_rect(fill = NA),
-        legend.position = "none",
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.text.y=element_blank(),
-        axis.ticks.y=element_blank()
-  )
-
-
-
-pdf(paste(wd,"/figures/sampling_map_loc.pdf",sep=""),width=5,height=5)
-ggplot() +
-  coord_equal(xlim = c(0, 100), ylim = c(0, 100)) +
-  annotation_custom(ggplotGrob(all), xmin = 25, xmax = 75, ymin = 25, 
-                    ymax = 75) +
-  annotation_custom(ggplotGrob(gulf_of_lion), xmin = 75, xmax = 100, ymin = 75, 
-                    ymax = 100) +
-  annotation_custom(ggplotGrob(mar_menor), xmin = 75, xmax = 100, ymin = 0, 
-                    ymax = 25) +
-  annotation_custom(ggplotGrob(algarve), xmin = 0, xmax = 25, ymin = 0, 
-                    ymax = 25) +
-  annotation_custom(ggplotGrob(bay_of_biscay), xmin = 0, xmax = 25, ymin = 75, 
-                    ymax = 100) +
-  theme_void()
-dev.off()
 
 #------

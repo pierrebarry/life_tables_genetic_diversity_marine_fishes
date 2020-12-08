@@ -7,10 +7,11 @@
 # Load packages ----
 library(ggpubr)
 library("RColorBrewer")
-library(ggiraph)
-library(plotly)
+library(ggplot2)
 library(png)
 library(grid)
+library(plotly)
+library(ggiraph)
 # Load data ----
 load(file="Data/Summary_GenomeScope.Rdata")
 load(file="Data/div.Rdata")
@@ -71,29 +72,29 @@ p_div_main<-ggplot(Summary_GenomeScope[Summary_GenomeScope$Sample!="DpuntMu5",],
                                   "#F4A582",
                                   "#92C5DE",
                                   "#0571B0"))
-p_div_genomescope<-ggplotly(p_div_main,tooltip=c("text","text1"),height = 650)  %>% partial_bundle() 
 
-  img1<-readPNG(paste("Data/","Cgale",".png",sep=""))
-  img2<-readPNG(paste("Data/","Cjuli",".png",sep=""))
-  img3<-readPNG(paste("Data/","Dlabr",".png",sep=""))
-  img4<-readPNG(paste("Data/","Dpunt",".png",sep=""))
-  img5<-readPNG(paste("Data/","Hgutt",".png",sep=""))
-  img6<-readPNG(paste("Data/","Lbude",".png",sep=""))
-  img7<-readPNG(paste("Data/","Lmorm",".png",sep=""))
-  img8<-readPNG(paste("Data/","Mmerl",".png",sep=""))
-  img9<-readPNG(paste("Data/","Msurm",".png",sep=""))
-  img10<-readPNG(paste("Data/","Peryt",".png",sep=""))
-  img11<-readPNG(paste("Data/","Scabr",".png",sep=""))
-  img12<-readPNG(paste("Data/","Scant",".png",sep=""))
-  img13<-readPNG(paste("Data/","Scine",".png",sep=""))
-  img14<-readPNG(paste("Data/","Spilc",".png",sep=""))
-  img15<-readPNG(paste("Data/","Ssard",".png",sep=""))
-  img16<-readPNG(paste("Data/","Styph",".png",sep=""))
-  j=1
-  p_div_genomescope<-  p_div_genomescope %>%
-    layout(
-      images = list(
-        list(
+p_div_genomescope<-ggplotly(p_div_main,tooltip=c("text","text1"),height = 650)  %>% partial_bundle() 
+img1<-readPNG(paste("Data/","Cgale",".png",sep=""))
+img2<-readPNG(paste("Data/","Cjuli",".png",sep=""))
+img3<-readPNG(paste("Data/","Dlabr",".png",sep=""))
+img4<-readPNG(paste("Data/","Dpunt",".png",sep=""))
+img5<-readPNG(paste("Data/","Hgutt",".png",sep=""))
+img6<-readPNG(paste("Data/","Lbude",".png",sep=""))
+img7<-readPNG(paste("Data/","Lmorm",".png",sep=""))
+img8<-readPNG(paste("Data/","Mmerl",".png",sep=""))
+img9<-readPNG(paste("Data/","Msurm",".png",sep=""))
+img10<-readPNG(paste("Data/","Peryt",".png",sep=""))
+img11<-readPNG(paste("Data/","Scabr",".png",sep=""))
+img12<-readPNG(paste("Data/","Scant",".png",sep=""))
+img13<-readPNG(paste("Data/","Scine",".png",sep=""))
+img14<-readPNG(paste("Data/","Spilc",".png",sep=""))
+img15<-readPNG(paste("Data/","Ssard",".png",sep=""))
+img16<-readPNG(paste("Data/","Styph",".png",sep=""))
+j=1
+p_div_genomescope<-  p_div_genomescope %>%
+  layout(
+    images = list(
+      list(
         source = raster2uri(as.raster(img1)),
         x = -0.001, y = j/16, 
         sizex = 0.1, sizey = 0.1
@@ -173,9 +174,9 @@ p_div_genomescope<-ggplotly(p_div_main,tooltip=c("text","text1"),height = 650)  
         x = -0.001, y = (j+15-0.5)/16, 
         sizex = 0.1, sizey = 0.1
       )
-      )
-    ) 
-  
+    )
+  ) 
+
 
 
 df <- data.frame()
@@ -203,7 +204,7 @@ pdf(paste("figures/Diversity_lollipop.pdf",sep=""),width=7.5,height=5)
 p_div_main
 dev.off()
 
-p<-ggplot(Summary_GenomeScope, 
+p<-ggplot(Summary_GenomeScope[Summary_GenomeScope$Sample!="DpuntMu5",], 
           aes(x=Species, 
               y=Heterozygosity)) + 
   geom_point(aes(col=Location),
@@ -1565,7 +1566,6 @@ p1<-ggplot(geno,aes(x=indiv_geno,y=Heterozygosity))+
                      values=as.vector(color_med_atl$Col))
 
 # Spilc
-#gatk_div=read.table("Data/diversity_Spilc.het",header=T)
 gatk_div=read.table("Data/het_Spilc.het",header=T)
 hh=(gatk_div$N_SITES-gatk_div$O.HOM.)/gatk_div$N_SITES
 indiv_het=hh*10
@@ -1617,8 +1617,8 @@ p2<-ggplot(geno,aes(x=indiv_geno,y=Heterozygosity))+
   #                        size = 3,
   #                        position='jitter',
   #                        alpha=0.75)+
-  annotate("text", x = 0.37, y = 0.34, label = "paste(italic(p), \" = 0.0363 \")",parse=T)+
-  annotate("text", x = 0.37, y = 0.32, label = "paste(italic(R) ^ 2, \" = 0.246 \")",parse=T)+
+  #Wannotate("text", x = 0.37, y = 0.34, label = "paste(italic(p), \" = 0.0363 \")",parse=T)+
+  #annotate("text", x = 0.37, y = 0.32, label = "paste(italic(R) ^ 2, \" = 0.246 \")",parse=T)+
   ylab("")+
   xlab("")+
   #ggtitle(expression(paste("Sea bass (", italic("D. labrax"), ")")))+
@@ -1634,8 +1634,8 @@ p_GATK_Spilc<-  p_GATK_Spilc %>%
     images = list(
       list(
         source = raster2uri(as.raster(img14)),
-        y = 1, x = 0.05, 
-        sizex = 0.25, sizey = 0.25
+        y = 1.8, x = 1.275, 
+        sizex = 0.1, sizey = 0.1
       )))
 # Plot
 geno$shape=rep(0,20)

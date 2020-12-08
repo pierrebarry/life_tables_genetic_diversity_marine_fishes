@@ -6,21 +6,11 @@
 
 # Load packages -----
 library(ggplot2)
-library(reshape2)
-library(ggthemes)
-library(ggrepel)
 library("RColorBrewer")
 library(ggpubr)
-library(png)
-library(grid)
-library(stringr)
-library(dabestr)
 library("gridExtra")
-library(shiny)
 library(ggiraph)
 library(ggExtra)
-library(gridExtra)
-library(magick)
 # Load data ----
 load(file="Data/fastp_process.Rdata")
 # Species plot ----

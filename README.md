@@ -6,15 +6,27 @@ Scripts and files to generate results and output of the article
 
 ## Sampling information
 
-`sampling_map.R` : display sampling locations of all individuals
+Input:
 
-`plot_age_surv_fec.R` : show  sex-specific age-specific survival and fecundity, cumulative survival for the 16 species retrieving from the litterature.
+- `sampling.Rdata`: sampling information of sequenced individuals
+
+Scripts:
+
+- `sampling_map.R` : display sampling locations of all individuals
+
+- `plot_age_surv_fec.R` : show  sex-specific age-specific survival and fecundity, cumulative survival for the 16 species retrieving from the litterature.
 
 ## Pre-processing fasta files
+
+Input :
+
+- `fastp_process.Rdata`: sequence data after quality correction
 
 ```ruby
 fastp -i {INPUT.R1} -I {INPUT.R2} -o {OUTPUT.FASTP_R1} -O {OUTPUT.FASTP_R2} --trim_poly_g --correction --low_complexity_filter --html {OUTPUT.REPORT_HTML} --json {OUTPUT.REPORTJSON} --report_title {SAMPLE} --thread 8 --dont_overwrite
 ```
+
+Scripts :
 
 `fastp.R` : display quality statistics of individual paired-end raw sequences
 
