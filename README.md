@@ -7,6 +7,7 @@ Scripts and files to generate results and output of the article
 ## Sampling information
 
 `sampling_map.R` : display sampling locations of all individuals
+
 `plot_age_surv_fec.R` : show  sex-specific age-specific survival and fecundity, cumulative survival for the 16 species retrieving from the litterature.
 
 ## Pre-processing fasta files
@@ -26,6 +27,7 @@ R --vanilla --slave --args {OUTPUT.HISTO} 21 150 OutputGenomeScope 1000000 Summa
 ```
 
 `genomescope.R` : display individual estimated and standard deviation of genome-wide genetic diversity, genome length, genome unique length, genome repeat length and model fit estimated by `GenomeScope`
+
 `historical_contingencies.R` : heatmap clustering of intraspecific variance in genetic diversity.
 
 ## Simple determinants of genetic diversity
@@ -72,3 +74,7 @@ SLiM/build/slim -t -m -d K={params.K} -d L={params.L} -d iter={wildcards.itera} 
 * [SLiM](https://messerlab.org/slim/)
 * [AgeNE](https://esajournals.onlinelibrary.wiley.com/doi/10.1890/10-1796.1)
 * [snakemake](https://github.com/snakemake/snakemake)
+
+## Youtube video
+
+For french-speakers, [a youtube video] (https://www.youtube.com/watch?v=98pTKuRNgAE&list=PL_rJBQvKDsY--gDXJ5d21QWQboa9OoGmh&index=3) summarising in 10 minutes the article.
