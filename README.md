@@ -77,4 +77,4 @@ SLiM/build/slim -t -m -d K={params.K} -d L={params.L} -d iter={wildcards.itera} 
 
 ## Youtube video
 
-For french-speakers, [a youtube video] (https://www.youtube.com/watch?v=98pTKuRNgAE&list=PL_rJBQvKDsY--gDXJ5d21QWQboa9OoGmh&index=3) summarising in 10 minutes the article.
+For french-speakers, [a youtube video](https://www.youtube.com/watch?v=98pTKuRNgAE&list=PL_rJBQvKDsY--gDXJ5d21QWQboa9OoGmh&index=3) summarising in 10 minutes the article.
