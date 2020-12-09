@@ -1,9 +1,14 @@
-######
-##  SLim simulations -------
-library(ggthemes)
-library(ggpubr)
-library(ggrepel)
-library(readxl)
+#------------------------------------------------------------------------#
+#                                                                        #
+#                           SLiM analysis                                #
+#                                                                        #
+#------------------------------------------------------------------------#
+
+# Load packages ----
+#library(ggthemes)
+#library(ggpubr)
+#library(ggrepel)
+#library(readxl)
 time_code=0
 ## Function -----
 test_slope_different_1=function(fit=fit){

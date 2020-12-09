@@ -4,7 +4,7 @@
 #                                                                        #
 #------------------------------------------------------------------------#
 
-
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Load packages ----
 library(png)
 library(RColorBrewer)
@@ -199,4 +199,4 @@ for (j in 1:length(levels(sites$sp))){
 names(p)=levels(sites$sp)
 species_map<-p
 
-#------
+

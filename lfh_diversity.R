@@ -4,6 +4,7 @@
 #                                                                        #
 #------------------------------------------------------------------------#
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Load packages -----
 library(lmtest)
 library(ggcorrplot)
@@ -13,9 +14,10 @@ library(Hmisc)
 library(viridis)
 library(readxl)
 library(ggrepel)
-library(ade4)
 library(betareg)
 library(ggthemes)
+library(ggpubr)
+library(ggplot2)
 time_code=0
 # Load data ----
 load(file="Data/div.Rdata")
@@ -194,22 +196,12 @@ corr_lfh_notebook<-corrplot.mixed(M,
                          tl.srt=30,
                          diag='n',
                          p.mat = p_mat,
-                         #addCoef.col = "black",
                          sig.level=1,
                          insig='p-value',
                          lower.col=viridis(100)[1:90],
                          upper.col=viridis(100)[1:90])
 dev.off()
 
-
-#corrplot(M, method = "color", col = col(200),
-#         type = "upper", order = "hclust", number.cex = .7,
-#         addCoef.col = "black", # Add coefficient of correlation
-#         tl.col = "black", tl.srt = 90, # Text label color and rotation
-#         # Combine with significance
-#         p.mat = p.mat, sig.level = 0.01, insig = "blank", 
-#         # hide correlation coefficient on the principal diagonal
-#         diag = FALSE)
 
 # Plot lifespan ----
 data_plot=data.frame(species=lfh$Species_plot,
@@ -306,11 +298,7 @@ x=7
 pdf(paste("figures/div_Adult_lifespan.pdf",sep=""),width=1*x,height=(2/3)*x)
 print(p)
 dev.off()
-
-pdf(paste("figures/div_propagule_size.pdf",sep=""),width=1*x,height=(2/3)*x)
-print(p)
-dev.off()
-## Plot suppmat ----
+# Plot suppmat ----
 data_plot=data.frame(species=lfh$Species_plot,
                      y=lfh$div,
                      x=lfh$Body_Size,
@@ -378,11 +366,6 @@ p<-ggplot(data_plot_whole,
               label=species,
               group=x2))+
   geom_line(aes(x=x,y=mean*100,color=gg,group=gg),size=1)+
-  geom_ribbon(data=data_plot_whole,
-              aes(ymin=sd_025,
-                  ymax=sd_975,
-                  group=gg),
-              alpha=0.1) +
   geom_point(data=data_plot_whole,size=2.5,
              aes(x=x,
                  y=y,
@@ -469,11 +452,6 @@ p<-ggplot(data_plot_whole,
               label=species,
               group=x2))+
   geom_line(aes(x=x,y=mean*100,color=gg,group=gg),size=1)+
-  geom_ribbon(data=data_plot_whole,
-              aes(ymin=sd_025,
-                  ymax=sd_975,
-                  group=gg),
-              alpha=0.1) +
   geom_point(data=data_plot_whole,size=2.5,
              aes(x=x,
                  y=y,
@@ -560,11 +538,6 @@ p<-ggplot(data_plot_whole,
               label=species,
               group=x2))+
   geom_line(aes(x=x,y=mean*100,color=gg,group=gg),size=1)+
-  geom_ribbon(data=data_plot_whole,
-              aes(ymin=sd_025,
-                  ymax=sd_975,
-                  group=gg),
-              alpha=0.1) +
   geom_point(data=data_plot_whole,size=2.5,
              aes(x=x,
                  y=y,
@@ -651,11 +624,6 @@ p<-ggplot(data_plot_whole,
               label=species,
               group=x2))+
   geom_line(aes(x=x,y=mean*100,color=gg,group=gg),size=1)+
-  geom_ribbon(data=data_plot_whole,
-              aes(ymin=sd_025,
-                  ymax=sd_975,
-                  group=gg),
-              alpha=0.1) +
   geom_point(data=data_plot_whole,size=2.5,
              aes(x=x,
                  y=y,
@@ -742,11 +710,6 @@ p<-ggplot(data_plot_whole,
               label=species,
               group=x2))+
   geom_line(aes(x=x,y=mean*100,color=gg,group=gg),size=1)+
-  geom_ribbon(data=data_plot_whole,
-              aes(ymin=sd_025,
-                  ymax=sd_975,
-                  group=gg),
-              alpha=0.1) +
   geom_point(data=data_plot_whole,size=2.5,
              aes(x=x,
                  y=y,
@@ -771,7 +734,7 @@ print(ggarrange(p_bodysize,p_trophiclevel,p_fec,p_propagule,p_lifespan,
                 ncol=2,nrow=3,
                 labels=c("A","B","C","D","E")))
 dev.off()
-## Plot for notebook ----
+# Plot for notebook ----
 
 legend_notebook=c("Body size (cm)",
                   "Age at maturity (years)",
@@ -877,31 +840,16 @@ for (i in c(5,6,7,8,9,13,14)){
                     color=col[62]),
                 size=2,
                 linetype='dashed')+
-      #geom_line(data=data_plot_tmp2,aes(x=x,
-      #                                  y=mean*100,
-      #                                  color=col[50]),
-      #          size=2,
-      #          linetype='dashed')+
       geom_ribbon(aes(ymin=data_plot$sd_025,
                       ymax=data_plot$sd_975),
-                  #fill="grey",
                   fill=col[25],
                   alpha=0.1,
                   col="white") +
-      #geom_ribbon(data=data_plot_tmp2,aes(ymin=sd_025,
-      #                                    ymax=sd_975),
-      #            fill="grey",
-      #            #fill=col[75],
-      #            alpha=0.1,
-      #            col="white") +
       geom_ribbon(data=data_plot_tmp,aes(ymin=sd_025,
                                          ymax=sd_975),
-                  #fill="grey",
                   fill=col[50],
                   alpha=0.1,
                   col="white") +
-      #geom_point(size=2.5,
-      #           aes(shape=x2)) +
       geom_point_interactive(
         aes(tooltip = paste("Heterozygosity:",round(y,3),
                             "\n Vernacular:",lfh$Vernacular,
@@ -918,14 +866,10 @@ for (i in c(5,6,7,8,9,13,14)){
             onclick=onclick,
             shape=x2),
         size = 2.5,
-        #col=geno$color,
         position='jitter',
         alpha=0.75)+
-      #geom_rangeframe()+
       theme_classic()+
       geom_text_repel(label=italic_species,col="black",parse=T)+
-      #scale_x_continuous(breaks=seq(1,21),
-      #                   labels=as.character(seq(1,21)))+
       scale_y_continuous(breaks=seq(0,1.5,by=0.25),
                          labels=as.character(seq(0,1.5,by=0.25)))+
       xlab(legend_notebook[a])+
@@ -933,14 +877,7 @@ for (i in c(5,6,7,8,9,13,14)){
       scale_color_manual(name = "Model",values=viridis(100)[c(47.5,72.5,97.5)],labels=c("Whole dataset","Only non brooding species","No parental care species"))+
       scale_shape_manual(name = "Brooding behaviour",values=c(19, 18))+
       theme(legend.position = "bottom")
-    #print(ex)
   })
   
 }
 
-## Check beta -- OPTIONAL ----
-sapply(c("probit", "cloglog", "cauchit", "loglog"),
-       function(x) lrtest(m1,update(m1, link = x))$`Pr(>Chisq)`[2])
-
-sapply(c("log", "sqrt"),
-       function(x) lrtest(m1,update(m1, link.phi = x))$`Pr(>Chisq)`[2])

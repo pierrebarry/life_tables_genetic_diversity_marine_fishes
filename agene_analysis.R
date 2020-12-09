@@ -1,16 +1,22 @@
-### AgeNe ------------------
+#------------------------------------------------------------------------#
+#                                                                        #
+#                        AgeNe output analysis                           #
+#                                                                        #
+#------------------------------------------------------------------------#
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Load packages ----
 library(ggplot2)
 library(ggthemes)
 library(ggpubr)
 library(betareg)
 library(readxl)
 library(ggiraph)
-library(ade4)
 library(ggrepel)
 library(viridis)
 time_code=0
-# Afhsjksdf
-## Function -----
+
+# Load function -----
 test_slope_different_1=function(fit=fit){
   # get from : https://stackoverflow.com/questions/33060601/test-if-the-slope-in-simple-linear-regression-equals-to-a-given-constant-in-r
   # Compute Summary with statistics      
@@ -32,14 +38,12 @@ test_intercept_different_0=function(fit=fit){
   return(pval)
 }
 
-## Load data and set working directory ----
-wd="C:/Users/ordinateur/ownCloud/COGEDIV/ARTICLE/Genetic_diversity_LHT"
-setwd(wd)
+# Load data ----
 load(file="Data/div.Rdata")
 load(file="Data/agene/agene_output.Rdata")
 lfh<-as.data.frame(read_excel("Data/GENETIC_DIVERSITY_DATA.xlsx",sheet="lfh"))
 lfh$div=as.vector(div)
-## Analysis ----
+# Analysis ----
 for (i in 1:5){
   agene_output[[i]]$body_size=lfh$Body_Size
 }
@@ -63,8 +67,6 @@ slope=vector('list',16)
 intercept=vector('list',16)
 pvalue=vector('list',16)
 
-# All possible contaminations
-combi=combn(seq(1,16),1)
 
 wikipedia=c("Coryphoblennius_galerita",
             "Coris_julis",
@@ -116,8 +118,6 @@ for (sim in 1:16){
                          x2=lfh$Parental_Care)
     data_plot$y=data_plot$y/(max(data_plot$y))
     data_plot$x=data_plot$x/(max(data_plot$x))
-    
-    #summary(lm(y~x,data=data_plot[data_plot$x2=="No",]))
     
     m1<-betareg(I(y/100)~x,data=data_plot,link='logit')
     m1_nopc <- betareg(I(y/100)~x,data=data_plot[data_plot$x2=="No",],link='logit')
@@ -179,14 +179,9 @@ for (sim in 1:16){
                       aes(x = x, 
                           y = mean*100,
                           label=species,
-                          #group=x2)
                       )) +
       geom_line(aes(colour=gg),
                 size=1)+
-      #geom_ribbon(aes(ymin=sd_025,
-      #                ymax=sd_975,colour=gg),
-      #            alpha=0.05,
-      #            size=0.05) +
       geom_point(data=data_plot,size=2.5,
                  aes(x=x,
                      y=y,
@@ -209,10 +204,8 @@ for (sim in 1:16){
       geom_abline(intercept=0,slope=1,col="red",lty=2)+
       annotate("text", x = 0.2025, y = 0.9, label = paste("Slope = ",round(coefficients(summary(m1_nopc))$mean[2,1],2)," (sd = ",round(coefficients(summary(m1_nopc))$mean[2,2],2),")",sep=""))+
       ggtitle(title[sim])
-      #annotate("text", x = 0.2025, y = 0.8, label = "paste(italic(R) ^ 2, \" = 0.55 \")",parse=T)
     
   })
-  
   
   compare_het=data.frame(SP1=c(NA),
                          SP2=c(NA),
@@ -223,16 +216,6 @@ for (sim in 1:16){
   Sp=c("Lbude","Hgutt","Dlabr","Scant","Dpunt","Lmorm","Cgale","Scine","Mmerl","Ssard","Styph","Peryt",
        "Msurm","Cjuli","Scabr","Spilc")
   
-  #for (j in 1:(nrow(agene_output[[1]])-1)){
-  #  for (k in (j+1):nrow(agene_output[[1]])){
-  #    vect=c(as.character(Sp[j]),
-  #           as.character(Sp[k]),
-  #           round(agene_output[[4]][which(agene_output[[4]]$Species_code==Sp[j]),sim+3]/agene_output[[4]][which(agene_output[[4]]$Species_code==Sp[k]),sim+3],3),
-  #           round(div[which(names(div)==Sp[j])]/div[which(names(div)==Sp[k])],3),
-  #           round((div[which(names(div)==Sp[j])]/div[which(names(div)==Sp[k])])*(agene_output[[4]][which(agene_output[[4]]$Species_code==Sp[k]),sim+3]/agene_output[[4]][which(agene_output[[4]]$Species_code==Sp[j]),sim+3]),3))
-  #    compare_het=rbind(compare_het,vect)
-  #  }
-  #}
   for (j in 1:(nrow(agene_output[[1]])-1)){
     for (k in (j+1):nrow(agene_output[[1]])){
       vect=c(as.character(Sp[j]),
@@ -267,14 +250,6 @@ for (sim in 1:16){
     
     if (compare_het$SP1[i]=="Hgutt" |
         compare_het$SP2[i]=="Hgutt"){
-        #compare_het$SP1[i]=="Scine" |
-        #compare_het$SP2[i]=="Scine" |
-        #compare_het$SP1[i]=="Styph" |
-        #compare_het$SP2[i]=="Styph" |
-        #compare_het$SP1[i]=="Cgale" |
-        #compare_het$SP2[i]=="Cgale" |
-        #compare_het$SP1[i]=="Scant" |
-        #compare_het$SP2[i]=="Scant"){
       
       col[i]="red"
       
@@ -285,11 +260,10 @@ for (sim in 1:16){
   }
   
   compare_het$col=col
-  #print(sim)
+
   # Parental care
   compare_het_stat=compare_het
   fit<-lm(compare_het_stat$ratio_mean~compare_het_stat$ratio_truehet)
-  #print(coefficients(summary(fit)))
   
   p1<-ggplot(compare_het_stat,aes(ratio_truehet,ratio_mean))+
     theme_classic()+
@@ -297,8 +271,6 @@ for (sim in 1:16){
     geom_point(size=2)+
     geom_smooth(method="lm",fullrange="T")+
     geom_abline(intercept=0,slope=1,col="red")+
-    #geom_point_interactive(aes(x = ratio_truehet, y = ratio_mean,
-    #                           tooltip =SP1, data_id = SP1))+
     xlab("Ratio of estimated NeN")+
     ylab("Ratio of observed genetic diversity")+
     ylim(c(0,max(compare_het_stat$ratio_mean)))+
@@ -309,7 +281,6 @@ for (sim in 1:16){
     p1_notebook<-ggplot(compare_het_stat,aes(ratio_truehet,ratio_mean))+
       theme_classic()+
       geom_rangeframe()+
-      #geom_point(size=2)+
       geom_smooth(method="lm",fullrange="T")+
       geom_abline(intercept=0,slope=1,col="red")+
       geom_point_interactive(aes(tooltip = paste("Species 1:",compare_het_stat$SP1,
@@ -333,6 +304,7 @@ for (sim in 1:16){
   agene_test$inter_mean[sim]=coefficients(summary(fit))[1,1]
   agene_test$inter_sd[sim]=coefficients(summary(fit))[1,2] 
   agene_test$pvalue[sim]=coefficients(summary(fit))[2,4] 
+  
   # No parental care
   compare_het_stat_nopc=compare_het
   compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP1!="Hgutt",]
@@ -347,21 +319,16 @@ for (sim in 1:16){
   compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP2!="Scant",]
   
   fit<-lm(compare_het_stat_nopc$ratio_mean~compare_het_stat_nopc$ratio_truehet)
-  #print(coefficients(summary(fit)))
   
   p2<-ggplot(compare_het_stat_nopc,aes(ratio_truehet,ratio_mean))+
     theme_classic()+
     geom_rangeframe()+
     geom_point(size=2)+
     geom_smooth(data=compare_het_stat_nopc,method="lm",fullrange="T")+
-    #geom_smooth(data=compare_het_stat,method="lm",fullrange="T")+
     geom_abline(intercept=0,slope=1,col="red")+
-    #geom_point_interactive(aes(x = ratio_truehet, y = ratio_mean,
-    #                           tooltip =SP1, data_id = SP1))+
     xlab("Ratio of estimated NeN")+
     ylab("Ratio of observed genetic diversity")+
     ylim(c(0,max(compare_het_stat_nopc$ratio_mean)))+
-    #ylim(c(0,1))+
     xlim(c(0,1))+
     ggtitle("No parental care species")
   
@@ -369,7 +336,6 @@ for (sim in 1:16){
     p2_notebook<-ggplot(compare_het_stat_nopc,aes(ratio_truehet,ratio_mean))+
       theme_classic()+
       geom_rangeframe()+
-      #geom_point(size=2)+
       geom_smooth(method="lm",fullrange="T")+
       geom_abline(intercept=0,slope=1,col="red")+
       geom_point_interactive(aes(tooltip = paste("Species 1:",compare_het_stat_nopc$SP1,
@@ -394,50 +360,9 @@ for (sim in 1:16){
   agene_test$pvalue_nopc[sim]=coefficients(summary(fit))[2,4] 
   
   
-  ## Sensibility
-  
-  #for (cc in 1:ncol(combi)){
-  #  
-  #  tmp_combi=combi[,cc]
-  #  # No parental care
-  #  compare_het_stat_nopc=compare_het
-  #  compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP1!=Sp[tmp_combi[1]],]
-  #  compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP2!=Sp[tmp_combi[1]],]
-  #  compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP1!=Sp[tmp_combi[2]],]
-  #  compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP2!=Sp[tmp_combi[2]],]
-  #  compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP1!=Sp[tmp_combi[3]],]
-  #  compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP2!=Sp[tmp_combi[3]],]
-  #  compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP1!=Sp[tmp_combi[4]],]
-  #  compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP2!=Sp[tmp_combi[4]],]
-  #  compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP1!=Sp[tmp_combi[5]],]
-  #  compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP2!=Sp[tmp_combi[5]],]
-  #  
-  #  fit<-lm(compare_het_stat_nopc$ratio_mean~compare_het_stat_nopc$ratio_truehet)
-  #  
-  #  sensibility_agene_slope[[sim]]=c(sensibility_agene_slope[[sim]],test_slope_different_1(fit=fit))
-  #  sensibility_agene_intercept[[sim]]=c(sensibility_agene_intercept[[sim]],test_intercept_different_0(fit=fit))
-  #  slope[[sim]]=c(slope[[sim]],as.numeric(fit$coefficients[2]))
-  #  intercept[[sim]]=c(intercept[[sim]],as.numeric(fit$coefficients[1]))
-  #  pvalue[[sim]]=c(pvalue[[sim]],as.numeric(coefficients(summary(fit))[2,4]))
-  #  
-  #}
-  
-    #pdf(paste(wd,"/figures/agene_Sim",sim,".pdf",sep=""),width=10,height=5)
-  #print(annotate_figure(figure,
-                        #top = text_grob(paste('Output',sim,sep=""), 
-                        #                color = "black", face = "bold", 
-                        #                size = 14)
-                        
-                        #bottom = text_grob("Data source: \n ToothGrowth data set", color = "blue",
-                        #                   hjust = 1, x = 1, face = "italic", size = 10),
-                        #left = text_grob("Figure arranged using ggpubr", color = "green", rot = 90),
-                        #right = "I'm done, thanks :-)!",
-                        #fig.lab = "Figure 1", fig.lab.face = "bold"
-  #))
-  #dev.off()
-  
 }
 
+# Plot suppmat figure ----
 pdf(paste(wd,"/figures/agene_suppmat.pdf",sep=""),width=30,height=30)
 print(ggarrange(p_agene[[1]],
                 p_agene[[2]],
@@ -514,10 +439,7 @@ print(ggarrange(figure1,
       ncol=4))
 dev.off()
 
-
-
-
-# All possible contaminations
+# All possible combinations
 combi=combn(seq(1,16),11)
 slope=c()
 pvalue=c()
@@ -576,21 +498,7 @@ if (time_code==1){
   
 }
 
-agene_plot=agene_test[,seq(1,11)]
-agene_plot[seq(17,32),]=agene_test[,seq(1,11)]
-agene_plot[17:32,6:11]=agene_test[,seq(12,16)]
-agene_plot$Parental_Care=c(rep("Yes",16),rep("No",16))
-pp<-ggplot(agene_plot, aes(x=Sim, y=slope_mean,col=Parental_Care)) + 
-  geom_pointrange(aes(ymin=slope_mean-slope_sd, ymax=slope_mean+slope_sd),position="jitter")+
-  geom_hline(yintercept=1)
-
-pq<-ggplot(agene_plot, aes(x=Sim, y=inter_mean,col=Parental_Care)) + 
-  geom_pointrange(aes(ymin=inter_mean-inter_sd, ymax=inter_mean+inter_sd),position="jitter")+
-  geom_hline(yintercept=0)
-
-ggarrange(pp,pq,nrow=2)
-
-## Main plot -----
+# Plot full model -----
 data_plot=data.frame(species=lfh$Species_plot,
                      y=lfh$div,
                      x=agene_output[[4]]$Output16,
@@ -689,94 +597,78 @@ pdf(paste(wd,"/figures/div_agene.pdf",sep=""),width=1*x,height=(2/3)*x)
 print(div_agene)
 dev.off()
 
-## Pairwise-plot ----
-for (sim in 16){
-  
-  compare_het=data.frame(SP1=c(NA),
-                         SP2=c(NA),
-                         ratio_mean=c(NA),
-                         ratio_truehet=c(NA),
-                         cross=c(NA))
-  
-  Sp=c("Lbude","Hgutt","Dlabr","Scant","Dpunt","Lmorm","Cgale","Scine","Mmerl","Ssard","Styph","Peryt",
-       "Msurm","Cjuli","Scabr","Spilc")
-  
-  #for (j in 1:(nrow(agene_output[[1]])-1)){
-  #  for (k in (j+1):nrow(agene_output[[1]])){
-  #    vect=c(as.character(Sp[j]),
-  #           as.character(Sp[k]),
-  #           round(agene_output[[4]][which(agene_output[[4]]$Species_code==Sp[j]),sim+3]/agene_output[[4]][which(agene_output[[4]]$Species_code==Sp[k]),sim+3],3),
-  #           round(div[which(names(div)==Sp[j])]/div[which(names(div)==Sp[k])],3),
-  #           round((div[which(names(div)==Sp[j])]/div[which(names(div)==Sp[k])])*(agene_output[[4]][which(agene_output[[4]]$Species_code==Sp[k]),sim+3]/agene_output[[4]][which(agene_output[[4]]$Species_code==Sp[j]),sim+3]),3))
-  #    compare_het=rbind(compare_het,vect)
-  #  }
-  #}
-  for (j in 1:(nrow(agene_output[[1]])-1)){
-    for (k in (j+1):nrow(agene_output[[1]])){
-      vect=c(as.character(Sp[j]),
-             as.character(Sp[k]),
-             round(agene_output[[4]][which(agene_output[[4]]$Species_code==Sp[j]),sim+3]/agene_output[[4]][which(agene_output[[4]]$Species_code==Sp[k]),sim+3],3),
-             round(div[which(names(div)==Sp[j])]/div[which(names(div)==Sp[k])],3)
-      )
-      compare_het=rbind(compare_het,vect)
-    }
+# Pairwise-plot full model ----
+sim=16
+compare_het=data.frame(SP1=c(NA),
+                       SP2=c(NA),
+                       ratio_mean=c(NA),
+                       ratio_truehet=c(NA),
+                       cross=c(NA))
+
+Sp=c("Lbude","Hgutt","Dlabr","Scant","Dpunt","Lmorm","Cgale","Scine","Mmerl","Ssard","Styph","Peryt",
+     "Msurm","Cjuli","Scabr","Spilc")
+
+
+for (j in 1:(nrow(agene_output[[1]])-1)){
+  for (k in (j+1):nrow(agene_output[[1]])){
+    vect=c(as.character(Sp[j]),
+           as.character(Sp[k]),
+           round(agene_output[[4]][which(agene_output[[4]]$Species_code==Sp[j]),sim+3]/agene_output[[4]][which(agene_output[[4]]$Species_code==Sp[k]),sim+3],3),
+           round(div[which(names(div)==Sp[j])]/div[which(names(div)==Sp[k])],3)
+    )
+    compare_het=rbind(compare_het,vect)
   }
-  compare_het=compare_het[-1,]
-  compare_het$ratio_mean=as.numeric(compare_het$ratio_mean)
-  compare_het$ratio_truehet=as.numeric(compare_het$ratio_truehet)
-  
-  # Parental care
-  compare_het_stat=compare_het
-  fit<-lm(compare_het_stat$ratio_mean~compare_het_stat$ratio_truehet)
-
-  pairwise_agene<-ggplot(compare_het_stat,aes(ratio_truehet,ratio_mean))+
-    theme_classic()+
-    geom_rangeframe()+
-    geom_point(size=2)+
-    geom_smooth(method="lm",fullrange="T")+
-    geom_abline(intercept=0,slope=1,col="red")+
-    #geom_point_interactive(aes(x = ratio_truehet, y = ratio_mean,
-    #                           tooltip =SP1, data_id = SP1))+
-    xlab("")+
-    ylab("")+
-    ylim(c(0,max(compare_het_stat$ratio_mean)))+
-    xlim(c(0,1))+
-    ggtitle("Whole dataset")+
-    annotate("text", x = 0.225, y = 4, label = "paste(italic(p), \" = 0.0205 \")",parse=T)+
-    annotate("text", x = 0.225, y = 3.75, label = "Est. slope = 0.73")
-
-  # No parental care
-  compare_het_stat_nopc=compare_het
-  compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP1!="Hgutt",]
-  compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP2!="Hgutt",]
-  compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP1!="Scine",]
-  compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP2!="Scine",]
-  compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP1!="Styph",]
-  compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP2!="Styph",]
-  compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP1!="Cgale",]
-  compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP2!="Cgale",]
-  compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP1!="Scant",]
-  compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP2!="Scant",]
-  
-  fit<-lm(compare_het_stat_nopc$ratio_mean~compare_het_stat_nopc$ratio_truehet)
-  
-  pairwise_agene_nopc<-ggplot(compare_het_stat_nopc,aes(ratio_truehet,ratio_mean))+
-    theme_classic()+
-    geom_rangeframe()+
-    geom_point(size=2)+
-    geom_smooth(data=compare_het_stat_nopc,method="lm",fullrange="T")+
-    #geom_smooth(data=compare_het_stat,method="lm",fullrange="T")+
-    geom_abline(intercept=0,slope=1,col="red")+
-    #geom_point_interactive(aes(x = ratio_truehet, y = ratio_mean,
-    #                           tooltip =SP1, data_id = SP1))+
-    xlab("")+
-    ylab("")+
-    ylim(c(0,max(compare_het_stat_nopc$ratio_mean)))+
-    #ylim(c(0,1))+
-    xlim(c(0,1))+
-    ggtitle("Only non brooding species")+
-    annotate("text", x = 0.23, y = 2.1, label = "paste(italic(p), \" = 0.000117 \")",parse=T)+
-    annotate("text", x = 0.23, y = 1.969, label = "Est. slope = 0.94")
-
-  #figure<-ggarrange(p1, p2, ncol = 2, nrow = 1)
 }
+compare_het=compare_het[-1,]
+compare_het$ratio_mean=as.numeric(compare_het$ratio_mean)
+compare_het$ratio_truehet=as.numeric(compare_het$ratio_truehet)
+
+# Parental care
+compare_het_stat=compare_het
+fit<-lm(compare_het_stat$ratio_mean~compare_het_stat$ratio_truehet)
+
+pairwise_agene<-ggplot(compare_het_stat,aes(ratio_truehet,ratio_mean))+
+  theme_classic()+
+  geom_rangeframe()+
+  geom_point(size=2)+
+  geom_smooth(method="lm",fullrange="T")+
+  geom_abline(intercept=0,slope=1,col="red")+
+  xlab("")+
+  ylab("")+
+  ylim(c(0,max(compare_het_stat$ratio_mean)))+
+  xlim(c(0,1))+
+  ggtitle("Whole dataset")+
+  annotate("text", x = 0.225, y = 4, label = "paste(italic(p), \" = 0.0205 \")",parse=T)+
+  annotate("text", x = 0.225, y = 3.75, label = "Est. slope = 0.73")
+
+# No parental care
+compare_het_stat_nopc=compare_het
+compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP1!="Hgutt",]
+compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP2!="Hgutt",]
+compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP1!="Scine",]
+compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP2!="Scine",]
+compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP1!="Styph",]
+compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP2!="Styph",]
+compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP1!="Cgale",]
+compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP2!="Cgale",]
+compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP1!="Scant",]
+compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP2!="Scant",]
+
+fit<-lm(compare_het_stat_nopc$ratio_mean~compare_het_stat_nopc$ratio_truehet)
+
+pairwise_agene_nopc<-ggplot(compare_het_stat_nopc,aes(ratio_truehet,ratio_mean))+
+  theme_classic()+
+  geom_rangeframe()+
+  geom_point(size=2)+
+  geom_smooth(data=compare_het_stat_nopc,method="lm",fullrange="T")+
+  geom_abline(intercept=0,slope=1,col="red")+
+  xlab("")+
+  ylab("")+
+  ylim(c(0,max(compare_het_stat_nopc$ratio_mean)))+
+  xlim(c(0,1))+
+  ggtitle("Only non brooding species")+
+  annotate("text", x = 0.23, y = 2.1, label = "paste(italic(p), \" = 0.000117 \")",parse=T)+
+  annotate("text", x = 0.23, y = 1.969, label = "Est. slope = 0.94")
+
+figure<-ggarrange(pairwise_agene,
+                  pairwise_agene_nopc,ncol=2)

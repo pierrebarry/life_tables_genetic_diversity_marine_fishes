@@ -4,6 +4,7 @@
 #                                                                        #
 #------------------------------------------------------------------------#
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Load packages ----
 library(ggpubr)
 library("RColorBrewer")
@@ -12,8 +13,6 @@ library(png)
 library(grid)
 library(plotly)
 library(ggiraph)
-# blabla
-
 # Load data ----
 load(file="Data/Summary_GenomeScope.Rdata")
 load(file="Data/div.Rdata")
@@ -35,7 +34,6 @@ for (i in 1:nrow(Summary_GenomeScope)){
 }
 
 Summary_GenomeScope$div=as.numeric(Summary_GenomeScope$div)
-#Summary_GenomeScope$Species=factor(Summary_GenomeScope$Species,levels=levels(Summary_GenomeScope$Species)[rev(pheat$tree_row$order)])
 p_div_main<-ggplot(Summary_GenomeScope[Summary_GenomeScope$Sample!="DpuntMu5",], 
           aes(x=Species, 
               y=Heterozygosity,
@@ -178,8 +176,6 @@ p_div_genomescope<-  p_div_genomescope %>%
       )
     )
   ) 
-
-
 
 df <- data.frame()
 fake_plot<-ggplot(df) + geom_point() + xlim(0,1) + ylim(1,17)
@@ -438,10 +434,10 @@ for (j in 1:length(levels(Summary_GenomeScope$Species))){
 fake_plot<-fake_plot+
   theme_void()+
   ylim(0.25,16.4)
-p_div_main<-p_div_main+ylim(c(0,8e+8))
-p_div_main<-ggarrange(fake_plot,p_div_main,ncol=2,widths = c(0.1,0.9),heights = c(0.9,1))
+p_genome_length_main<-p_div_main+ylim(c(0,8e+8))
+p_genome_length_main<-ggarrange(fake_plot,p_genome_length_main,ncol=2,widths = c(0.1,0.9),heights = c(0.9,1))
 pdf(paste("figures/Genome_length_lollipop.pdf",sep=""),width=7.5,height=5)
-p_div_main
+p_genome_length_main
 dev.off()
 
 p<-ggplot(Summary_GenomeScope, 
@@ -679,10 +675,10 @@ for (j in 1:length(levels(Summary_GenomeScope$Species))){
 fake_plot<-fake_plot+
   theme_void()+
   ylim(0.25,16.4)
-p_div_main<-p_div_main+ylim(c(0,2.5e+8))
-p_div_main<-ggarrange(fake_plot,p_div_main,ncol=2,widths = c(0.1,0.9),heights = c(0.9,1))
+p_genome_repeat<-p_div_main+ylim(c(0,2.5e+8))
+p_genome_repeat<-ggarrange(fake_plot,p_genome_repeat,ncol=2,widths = c(0.1,0.9),heights = c(0.9,1))
 pdf(paste("figures/Genome_repeat_lollipop.pdf",sep=""),width=7.5,height=5)
-p_div_main
+p_genome_repeat
 dev.off()
 
 p<-ggplot(Summary_GenomeScope, 
@@ -920,10 +916,10 @@ for (j in 1:length(levels(Summary_GenomeScope$Species))){
 fake_plot<-fake_plot+
   theme_void()+
   ylim(0.25,16.4)
-p_div_main<-p_div_main+ylim(c(0,6.5e+8))
-p_div_main<-ggarrange(fake_plot,p_div_main,ncol=2,widths = c(0.1,0.9),heights = c(0.9,1))
+p_genome_unique<-p_div_main+ylim(c(0,6.5e+8))
+p_genome_unique<-ggarrange(fake_plot,p_genome_unique,ncol=2,widths = c(0.1,0.9),heights = c(0.9,1))
 pdf(paste("figures/Genome_unique_lollipop.pdf",sep=""),width=7.5,height=5)
-p_div_main
+p_genome_unique
 dev.off()
 
 p<-ggplot(Summary_GenomeScope, 
@@ -1158,10 +1154,10 @@ for (j in 1:length(levels(Summary_GenomeScope$Species))){
 fake_plot<-fake_plot+
   theme_void()+
   ylim(0.25,16.4)
-p_div_main<-p_div_main+ylim(c(0,100))
-p_div_main<-ggarrange(fake_plot,p_div_main,ncol=2,widths = c(0.1,0.9),heights = c(0.9,1))
+p_model_fit<-p_div_main+ylim(c(0,100))
+p_model_fit<-ggarrange(fake_plot,p_model_fit,ncol=2,widths = c(0.1,0.9),heights = c(0.9,1))
 pdf(paste("figures/Model_fit_lollipop.pdf",sep=""),width=7.5,height=5)
-p_div_main
+p_model_fit
 dev.off()
 
 p<-ggplot(Summary_GenomeScope, 
@@ -1398,10 +1394,10 @@ for (j in 1:length(levels(Summary_GenomeScope$Species))){
 fake_plot<-fake_plot+
   theme_void()+
   ylim(0.25,16.4)
-p_div_main<-p_div_main+ylim(c(0,1))
-p_div_main<-ggarrange(fake_plot,p_div_main,ncol=2,widths = c(0.1,0.9),heights = c(0.9,1))
+p_read_error_rate<-p_div_main+ylim(c(0,1))
+p_read_error_rate<-ggarrange(fake_plot,p_read_error_rate,ncol=2,widths = c(0.1,0.9),heights = c(0.9,1))
 pdf(paste("figures/Read_error_lollipop.pdf",sep=""),width=7.5,height=5)
-p_div_main
+p_read_error_rate
 dev.off()
 
 p<-ggplot(Summary_GenomeScope, 
@@ -1465,6 +1461,17 @@ pdf(paste("figures/Read_error.pdf",sep=""),width=7.5,height=5)
 p
 dev.off()
 
+# Supp figure ----
+pdf(paste("figures/genomescope_suppmat.pdf",sep=""),width=17.5,height=17.5)
+ggarrange(p_genome_length_main,
+          p_genome_unique,
+          p_genome_repeat,
+          p_model_fit,
+          p_read_error_rate,
+          labels=c("A","B","C","D","E"),
+          label.y=1.015,
+          nrow=3,ncol=2)
+dev.off()
 
 # Verification of GenomeScope ------
 gatk_div=read.table("Data/diversity_Dlabr.het",header=T)
@@ -1513,20 +1520,10 @@ p1<-ggplot(geno,aes(x=indiv_geno,y=Heterozygosity))+
              size=3,
              position="jitter",
              alpha=0.75)+
-  #geom_point_interactive(
-  #  aes(tooltip = paste("Sample:",Sample,
-  #                      "\n Location:",Location,
-  #                      "\n GenomeScope:",round(Heterozygosity,3),
-  #                      "\n GATK:",round(indiv_geno,3)),data_id = Location,
-  #                        color=Location),
-  #                        size = 3,
-  #                        position='jitter',
-  #                        alpha=0.75)+
   annotate("text", x = 0.37, y = 0.34, label = "paste(italic(p), \" = 4.45e-10 \")",parse=T)+
   annotate("text", x = 0.37, y = 0.32, label = "paste(italic(R) ^ 2, \" = 0.89 \")",parse=T)+
   ylab("")+
   xlab("")+
-  #ggtitle(expression(paste("Sea bass (", italic("D. labrax"), ")")))+
   annotation_custom(g, ymin=0.40, ymax=0.44, xmin=0.29, xmax=0.32) +
   theme(plot.title = element_text(hjust = 0.5))+
   scale_color_manual(breaks = c("Li", "Mu", "Fa","Ga"),
@@ -1571,7 +1568,6 @@ p1<-ggplot(geno,aes(x=indiv_geno,y=Heterozygosity))+
 gatk_div=read.table("Data/het_Spilc.het",header=T)
 hh=(gatk_div$N_SITES-gatk_div$O.HOM.)/gatk_div$N_SITES
 indiv_het=hh*10
-#*(3.1/750)*100
 gatk_div=cbind(gatk_div,indiv_het)
 geno=Summary_GenomeScope[Summary_GenomeScope$Species=="Spilc",]
 indiv_geno=rep(0,20)
@@ -1579,7 +1575,6 @@ indiv_geno=rep(0,20)
 for (i in 1:20){
   for (j in 1:20){
     if (gatk_div$INDV[j]==geno$Sample[i]){
-      #indiv_geno[i]=gatk_div$O.HOM.[j]
       indiv_geno[i]=indiv_het[j]
     }
   }
@@ -1610,21 +1605,8 @@ p2<-ggplot(geno,aes(x=indiv_geno,y=Heterozygosity))+
              size=3,
              position="jitter",
              alpha=0.75)+
-  #geom_point_interactive(
-  #  aes(tooltip = paste("Sample:",Sample,
-  #                      "\n Location:",Location,
-  #                      "\n GenomeScope:",round(Heterozygosity,3),
-  #                      "\n GATK:",round(indiv_geno,3)),data_id = Location,
-  #                        color=Location),
-  #                        size = 3,
-  #                        position='jitter',
-  #                        alpha=0.75)+
-  #Wannotate("text", x = 0.37, y = 0.34, label = "paste(italic(p), \" = 0.0363 \")",parse=T)+
-  #annotate("text", x = 0.37, y = 0.32, label = "paste(italic(R) ^ 2, \" = 0.246 \")",parse=T)+
   ylab("")+
   xlab("")+
-  #ggtitle(expression(paste("Sea bass (", italic("D. labrax"), ")")))+
-  #annotation_custom(g, ymin=0.40, ymax=0.44, xmin=0.29, xmax=0.32) +
   theme(plot.title = element_text(hjust = 0.5))+
   scale_color_manual(breaks = c("Li", "Mu", "Fa","Ga"),
                      labels=c("Gulf of Lion","Mar Menor","Algarve","Bay of Biscay"),
@@ -1664,8 +1646,6 @@ p2<-ggplot(geno,aes(x=indiv_geno,y=Heterozygosity,color=Location))+
     alpha=0.75)+ 
   annotate("text", x = 1.4, y = 1.3, label = "paste(italic(p), \" = 0.0363 \")",parse=T)+
   annotate("text", x = 1.4, y = 1.25, label = "paste(italic(R) ^ 2, \" = 0.246 \")",parse=T)+
-  #ylab("Heterozygosity estimated \n with GenomeScope")+
-  #xlab("Heterozygosity estimated \n after mapping and variant calling")+
   ylab("")+
   xlab("")+
   ggtitle(expression(paste("European pilchard (", italic("S. pilchardus"), ")")))+
@@ -1712,3 +1692,4 @@ genome_length<-tapply(ss$Genome_Length,ss$Species,FUN=median)
 
 save(div,file="Data/div.Rdata")
 save(genome_length,file="Data/genome_length.Rdata")
+
