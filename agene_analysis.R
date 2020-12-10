@@ -672,3 +672,8 @@ pairwise_agene_nopc<-ggplot(compare_het_stat_nopc,aes(ratio_truehet,ratio_mean))
 
 figure<-ggarrange(pairwise_agene,
                   pairwise_agene_nopc,ncol=2)
+
+x=7
+pdf(paste(wd,"/figures/div_agene_pairwise.pdf",sep=""),width=1*x,height=(2/3)*x)
+print(figure)
+dev.off()

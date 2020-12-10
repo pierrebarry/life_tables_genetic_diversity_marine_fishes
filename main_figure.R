@@ -4,11 +4,26 @@
 #                                                                        #
 #------------------------------------------------------------------------#
 
-# Figure 1 -----
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Load packages ----
 library(heatmap3)
 library(ggplotify)
 library(pheatmap)
-
+library(RColorBrewer)
+library(ggplot2)
+library(png)
+library(grid)
+library(ggpubr)
+library(ggiraph)
+library(igraph)
+library(magick)
+library(emdbook)
+library(readxl)
+library(betareg)
+library(viridis)
+library(ggthemes)
+library(ggrepel)
+# Load functions ----
 draw_colnames_45 <- function (coln, gaps, ...) {
   coord <- pheatmap:::find_coordinates(length(coln), gaps)
   x     <- coord$coord - 0.5 * coord$size
@@ -24,9 +39,41 @@ assignInNamespace(
   ns = asNamespace("pheatmap")
 )
 
+# Figure 1 -----
+load(file="Data/Summary_GenomeScope.Rdata")
+load(file="Data/div.Rdata")
+ss=Summary_GenomeScope[Summary_GenomeScope$Sample!="DpuntMu5",]
+scale_centered_species=c()
+for(i in 1:nrow(ss)){
+  scale_centered_species[i]=(ss$Heterozygosity[i]-mean(ss[ss$Species==ss$Species[i],]$Heterozygosity))/(sd(ss[ss$Species==ss$Species[i],]$Heterozygosity))
+}
+div_loc=tapply(scale_centered_species,
+               list(ss$Species,ss$Location),
+               mean)
+
+row.names(div_loc)=c("C. galerita",
+                     "C. julis",
+                     "D. labrax",
+                     "D. puntazzo",
+                     "H. guttulatus",
+                     "L. budegassa",
+                     "L. mormyrus",
+                     "M. merluccius",
+                     "M. surmuletus",
+                     "P. erythrinus",
+                     "S. cabrilla",
+                     "S. cantharus",
+                     "S. cinereus",
+                     "S. pilchardus",
+                     "S. sarda",
+                     "S. typhle")
+
+colnames(div_loc)=c("Algarve",
+                    "Bay of \n Biscay ",
+                    "Gulf of \n Lion   ",
+                    "Costa \n Calida")
 heat<-as.ggplot(pheat<-pheatmap(div_loc,
          col=RColorBrewer::brewer.pal(10, "Spectral"),
-         #col=plasma(500),
          labels_row = as.expression(lapply(rownames(div_loc), function(a) bquote(italic(.(a))))),
          margins=c(10,10),
          fontsize_col=9,
@@ -48,7 +95,6 @@ for (i in 1:nrow(Summary_GenomeScope)){
 Summary_GenomeScope$col=color
 
 Summary_GenomeScope$Location=factor(Summary_GenomeScope$Location,levels=c("Li","Mu","Fa","Ga"))
-# Genetic diversity plot ----
 
 for (i in 1:nrow(Summary_GenomeScope)){
   Summary_GenomeScope$div[i]=as.vector(div)[which(as.character(Summary_GenomeScope$Species[i])==names(div))]
@@ -113,13 +159,138 @@ for (j in 1:length(levels(Summary_GenomeScope$Species))){
 fake_plot<-fake_plot+
   theme_void()+
   ylim(0.25,16.4)
-#♠  ylim(0.5,16.25)
 main_sp<-ggarrange(fake_plot,p_div_main,ncol=2,widths = c(0.1,0.9),heights = c(0.9,1))
 
+gatk_div=read.table("Data/diversity_Dlabr.het",header=T)
+hh=(gatk_div$N_SITES-gatk_div$O.HOM.)/gatk_div$N_SITES
+indiv_het=hh*(11.5/675)*100
+gatk_div=cbind(gatk_div,indiv_het)
+geno=Summary_GenomeScope[Summary_GenomeScope$Species=="Dlabr",]
+indiv_geno=rep(0,20)
+
+for (i in 1:20){
+  
+  for (j in 1:20){
+    
+    if (gatk_div$INDV[j]==geno$Sample[i]){
+      
+      indiv_geno[i]=gatk_div$indiv_het[j]
+      
+    }
+    
+  }
+  
+}
+
+geno=cbind(geno,indiv_geno)
+color=c()
+for (i in 1:nrow(geno)){
+  color[i]=as.character(color_med_atl$Col[which(as.character(geno$Location[i])==color_med_atl$Location)])
+}
+geno$col=color
+geno$indiv_geno=as.numeric(geno$indiv_geno)
+geno$Heterozygosity=as.numeric(geno$Heterozygosity)
+my.formula <- y~x
+ll<-lm(Heterozygosity~indiv_geno,data=geno)
+pvalue=summary(ll)$coefficients[2,4]
+summary(ll)
+
+dlabr <- readPNG(paste("Data/Dlabr.png",sep=""))
+g <- rasterGrob(dlabr, interpolate=TRUE)
+
+p1<-ggplot(geno,aes(x=indiv_geno,y=Heterozygosity))+
+  theme_classic()+
+  stat_smooth(method="lm", se=T,col="black",linetype="dashed")+
+  geom_point_interactive(
+    aes(tooltip = paste("Sample:",Sample,
+                        "\n Location:",Location,
+                        "\n GenomeScope:",round(Heterozygosity,3),
+                        "\n GATK:",round(indiv_geno,3)),data_id = Location,
+        color=Location),
+    size = 3,
+    position='jitter',
+    alpha=0.75)+
+  annotate("text", x = 0.37, y = 0.34, label = "paste(italic(p), \" = 4.45e-10 \")",parse=T)+
+  annotate("text", x = 0.37, y = 0.32, label = "paste(italic(R) ^ 2, \" = 0.89 \")",parse=T)+
+  ylab("")+
+  xlab("")+
+  ggtitle(expression(paste("Sea bass (", italic("D. labrax"), ")")))+
+  annotation_custom(g, ymin=0.40, ymax=0.44, xmin=0.29, xmax=0.32) +
+  theme(plot.title = element_text(hjust = 0.5))+
+  scale_color_manual(breaks = c("Li", "Mu", "Fa","Ga"),
+                     labels=c("Gulf of Lion","Costa Calida","Algarve","Bay of Biscay"),
+                     values=as.vector(color_med_atl$Col))
+
+gatk_div=read.table("Data/het_Spilc.het",header=T)
+hh=(gatk_div$N_SITES-gatk_div$O.HOM.)/gatk_div$N_SITES
+indiv_het=hh*10
+gatk_div=cbind(gatk_div,indiv_het)
+geno=Summary_GenomeScope[Summary_GenomeScope$Species=="Spilc",]
+indiv_geno=rep(0,20)
+
+for (i in 1:20){
+  for (j in 1:20){
+    if (gatk_div$INDV[j]==geno$Sample[i]){
+      indiv_geno[i]=indiv_het[j]
+    }
+  }
+}
+
+geno=cbind(geno,indiv_geno)
+color=c()
+for (i in 1:nrow(geno)){
+  color[i]=as.character(color_med_atl$Col[which(as.character(geno$Location[i])==color_med_atl$Location)])
+}
+geno$col=color
+geno$indiv_geno=as.numeric(geno$indiv_geno)
+geno$Heterozygosity=as.numeric(geno$Heterozygosity)
+my.formula <- y~x
+ll<-lm(Heterozygosity~indiv_geno,data=geno[geno$Heterozygosity<=1.8,])
+pvalue=summary(ll)$coefficients[2,4]
+summary(ll)
+
+spilc <- readPNG(paste("Data/Spilc.png",sep=""))
+g <- rasterGrob(spilc, interpolate=TRUE)
+geno$shape=rep(0,20)
+for (i in 1:20){
+  if (geno$Heterozygosity[i]>=1.8){
+    geno$shape[i]=2
+  } else {
+    geno$shape[i]=1
+  }
+}
+geno$shape=factor(geno$shape)
+p2<-ggplot(geno,aes(x=indiv_geno,y=Heterozygosity,color=Location))+
+  theme_classic()+
+  stat_smooth(data=geno[geno$Heterozygosity<=1.8,],method="lm", se=T,col="black",linetype="dashed")+
+  geom_point_interactive(
+    aes(tooltip = paste("Sample:",Sample,
+                        "\n Location:",Location,
+                        "\n GenomeScope:",round(Heterozygosity,3),
+                        "\n GATK:",round(indiv_geno,3)),data_id = Location,
+        color=Location,
+        shape=shape),
+    size = 3,
+    position='jitter',
+    alpha=0.75)+ 
+  annotate("text", x = 1.4, y = 1.3, label = "paste(italic(p), \" = 0.0363 \")",parse=T)+
+  annotate("text", x = 1.4, y = 1.25, label = "paste(italic(R) ^ 2, \" = 0.246 \")",parse=T)+
+  ylab("")+
+  xlab("")+
+  ggtitle(expression(paste("European pilchard (", italic("S. pilchardus"), ")")))+
+  theme(plot.title = element_text(hjust = 0.5))+
+  scale_color_manual(breaks = c("Li", "Mu", "Fa","Ga"),
+                     labels=c("Gulf of Lion","Costa Calida","Algarve","Bay of Biscay"),
+                     values=as.vector(color_med_atl$Col))+
+  annotation_custom(g, ymin=1.8, ymax=2.0, xmin=1.275, xmax=1.3) 
+
+figure1<-ggarrange(p1, p2, nrow = 2, ncol = 1,common.legend = TRUE,legend="top")
+figure1<-annotate_figure(figure1,
+                         left = text_grob("Genetic diversity estimated with GenomeScope (%)",rot = 90,vjust=2),
+                         bottom = text_grob("Genetic diversity estimated after mapping and variant calling (%)",vjust=-1.5)
+)
 
 
-wd="C:/Users/ordinateur/ownCloud/COGEDIV/ARTICLE/Genetic_diversity_LHT"
-setwd(wd)
 pdf(paste("figures/main.pdf",sep=""),width=11,height=11)
 print(ggarrange(map,
                 figure1,
@@ -135,14 +306,6 @@ dev.off()
 
 
 # Figure 3 ----
-library(grid)
-library(png)
-library(emdbook)
-library(TeachingDemos)
-library(igraph)
-library(magick)
-library(ggplot2)
-
 nodes <- c('0','1','2','3','4','5','6','7','8','9')
 x <- seq(0,19,by=2)
 y <- rep(90,10)
@@ -203,7 +366,6 @@ Maturity=2
 for (j in Maturity:10){
   fec[j]=1*exp((j-2+1)*0.5)
 }
-#fec[Maturity[i]:Lifespan[i]]=fec[Maturity[i]:Lifespan[i]]+abs(min(fec[Maturity[i]:Lifespan[i]]))
 fec[2:10]=fec[2:10]/max(fec[2:10])
 
 fec=c(0,fec)
@@ -295,6 +457,410 @@ if (run_image==1){
   
 }
 #All plots
+load(file="Data/agene/agene_output.Rdata")
+lfh<-as.data.frame(read_excel("Data/GENETIC_DIVERSITY_DATA.xlsx",sheet="lfh"))
+lfh$div=as.vector(div)
+data_plot=data.frame(species=lfh$Species_plot,
+                     y=lfh$div,
+                     x=agene_output[[4]]$Output16,
+                     x2=lfh$Parental_Care)
+summary(lm(y~x,data=data_plot[data_plot$x2=="No",]))
+
+m1<-betareg(I(y/100)~x,data=data_plot,link='logit')
+m1_nopc <- betareg(I(y/100)~x,data=data_plot[data_plot$x2=="No",],link='logit')
+m1_pc <- betareg(I(y/100)~x,data=data_plot[data_plot$x2=="Yes",],link='logit')
+
+data_plot$mean=fitted(m1)
+data_plot$sd_025=fitted(m1)*100-2*coefficients(summary(m1))$mean[2,2]
+data_plot$sd_975=fitted(m1)*100+2*coefficients(summary(m1))$mean[2,2]
+
+fit_m1_nopc_tmp=fitted(m1_nopc)
+sd_025_m1_no_pc_tmp=fitted(m1_nopc)*100-2*coefficients(summary(m1_nopc))$mean[2,2]
+sd_975_m1_no_pc_tmp=fitted(m1_nopc)*100+2*coefficients(summary(m1_nopc))$mean[2,2]
+
+fit_m1_pc_tmp=fitted(m1_pc)
+sd_025_m1_pc_tmp=fitted(m1_pc)*100-2*coefficients(summary(m1_pc))$mean[2,2]
+sd_975_m1_pc_tmp=fitted(m1_pc)*100+2*coefficients(summary(m1_pc))$mean[2,2]
+
+data_plot_tmp=data_plot
+data_plot_tmp=data_plot_tmp[data_plot_tmp$x2=="No",]
+data_plot_tmp$mean=fitted(m1_nopc)
+data_plot_tmp$sd_025=fitted(m1_nopc)*100-2*coefficients(summary(m1_nopc))$mean[2,2]
+data_plot_tmp$sd_975=fitted(m1_nopc)*100+2*coefficients(summary(m1_nopc))$mean[2,2]
+
+data_plot_tmp2=data_plot
+data_plot_tmp2=data_plot_tmp2[data_plot_tmp2$x2=="Yes",]
+data_plot_tmp2$mean=fitted(m1_pc)
+data_plot_tmp2$sd_025=fitted(m1_pc)*100-2*coefficients(summary(m1_pc))$mean[2,2]
+data_plot_tmp2$sd_975=fitted(m1_pc)*100+2*coefficients(summary(m1_pc))$mean[2,2]
+
+min_trait=min(data_plot$x[is.na(data_plot$y)==FALSE],na.rm=T)
+max_trait=max(data_plot$x[is.na(data_plot$y)==FALSE],na.rm=T)
+diff_max_min_gen=max(data_plot$y,na.rm=T)-min(data_plot$y,na.rm=T)
+diff_max_min_trait=max_trait-min_trait
+
+italic_species=c("italic('C. galerita')",
+                 "italic('C. julis')",
+                 "italic('D. labrax')",
+                 "italic('D. puntazzo')",
+                 "italic('H. guttulatus')",
+                 "italic('L. budegassa')",
+                 "italic('L. mormyrus')",
+                 "italic('M. merluccius')",
+                 "italic('M. surmuletus')",
+                 "italic('P. erythrinus')",
+                 "italic('S. cabrilla')",
+                 "italic('S. cantharus')",
+                 "italic('S. cinereus')",
+                 "italic('S. pilchardus')",
+                 "italic('S. sarda')",
+                 "italic('S. typhle')")
+
+col=viridis(100)
+
+data_plot_whole=rbind(data_plot,data_plot_tmp)
+data_plot_whole$gg=c(rep(1,16),rep(2,11))
+data_plot_whole$gg=factor(data_plot_whole$gg)
+
+div_agene<-ggplot(data_plot_whole, 
+                  aes(x = x, 
+                      y = mean*100,
+                      label=species,
+                      #group=x2)
+                  )) +
+  geom_line(aes(colour=gg),
+            size=1)+
+  #geom_ribbon(aes(ymin=sd_025,
+  #                ymax=sd_975,colour=gg),
+  #            alpha=0.05,
+  #            size=0.05) +
+  geom_point(data=data_plot,size=2.5,
+             aes(x=x,
+                 y=y,
+                 shape=x2))+
+  geom_rangeframe()+
+  theme_classic()+
+  geom_text_repel(data=data_plot,aes(x=x,y=y),label=italic_species,col="black",parse=T)+
+  scale_x_continuous(breaks=seq(0,0.7,by=0.1),
+                     labels=as.character(seq(0,0.7,by=0.1)))+
+  scale_y_continuous(breaks=seq(0,1.5,by=0.25),
+                     labels=as.character(seq(0,1.5,by=0.25)))+
+  xlab(expression(N[e]/N))+
+  ylab("")+
+  scale_color_manual(name = "Model",values=viridis(100)[c(47.5,72.5,97.5)],labels=c("Whole dataset","Only non brooding species","No parental care species"))+
+  scale_shape_manual(name = "Brooding behaviour",values=c(19, 1))+
+  theme(legend.position = "bottom")+
+  annotate("text", x = 0.2025, y = 1.325, label = "paste(italic(p), \" = 0.000966 \")",parse=T)+
+  annotate("text", x = 0.2025, y = 1.265, label = "paste(italic(R) ^ 2, \" = 0.55 \")",parse=T)
+sim=16
+compare_het=data.frame(SP1=c(NA),
+                       SP2=c(NA),
+                       ratio_mean=c(NA),
+                       ratio_truehet=c(NA),
+                       cross=c(NA))
+
+Sp=c("Lbude","Hgutt","Dlabr","Scant","Dpunt","Lmorm","Cgale","Scine","Mmerl","Ssard","Styph","Peryt",
+     "Msurm","Cjuli","Scabr","Spilc")
+
+
+for (j in 1:(nrow(agene_output[[1]])-1)){
+  for (k in (j+1):nrow(agene_output[[1]])){
+    vect=c(as.character(Sp[j]),
+           as.character(Sp[k]),
+           round(agene_output[[4]][which(agene_output[[4]]$Species_code==Sp[j]),sim+3]/agene_output[[4]][which(agene_output[[4]]$Species_code==Sp[k]),sim+3],3),
+           round(div[which(names(div)==Sp[j])]/div[which(names(div)==Sp[k])],3)
+    )
+    compare_het=rbind(compare_het,vect)
+  }
+}
+compare_het=compare_het[-1,]
+compare_het$ratio_mean=as.numeric(compare_het$ratio_mean)
+compare_het$ratio_truehet=as.numeric(compare_het$ratio_truehet)
+
+# Parental care
+compare_het_stat=compare_het
+fit<-lm(compare_het_stat$ratio_mean~compare_het_stat$ratio_truehet)
+
+pairwise_agene<-ggplot(compare_het_stat,aes(ratio_truehet,ratio_mean))+
+  theme_classic()+
+  geom_rangeframe()+
+  geom_point(size=2)+
+  geom_smooth(method="lm",fullrange="T")+
+  geom_abline(intercept=0,slope=1,col="red")+
+  xlab("")+
+  ylab("")+
+  ylim(c(0,max(compare_het_stat$ratio_mean)))+
+  xlim(c(0,1))+
+  ggtitle("Whole dataset")+
+  annotate("text", x = 0.225, y = 4, label = "paste(italic(p), \" = 0.0205 \")",parse=T)+
+  annotate("text", x = 0.225, y = 3.75, label = "Est. slope = 0.73")
+
+# No parental care
+compare_het_stat_nopc=compare_het
+compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP1!="Hgutt",]
+compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP2!="Hgutt",]
+compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP1!="Scine",]
+compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP2!="Scine",]
+compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP1!="Styph",]
+compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP2!="Styph",]
+compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP1!="Cgale",]
+compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP2!="Cgale",]
+compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP1!="Scant",]
+compare_het_stat_nopc=compare_het_stat_nopc[compare_het_stat_nopc$SP2!="Scant",]
+
+fit<-lm(compare_het_stat_nopc$ratio_mean~compare_het_stat_nopc$ratio_truehet)
+
+pairwise_agene_nopc<-ggplot(compare_het_stat_nopc,aes(ratio_truehet,ratio_mean))+
+  theme_classic()+
+  geom_rangeframe()+
+  geom_point(size=2)+
+  geom_smooth(data=compare_het_stat_nopc,method="lm",fullrange="T")+
+  geom_abline(intercept=0,slope=1,col="red")+
+  xlab("")+
+  ylab("")+
+  ylim(c(0,max(compare_het_stat_nopc$ratio_mean)))+
+  xlim(c(0,1))+
+  ggtitle("Only non brooding species")+
+  annotate("text", x = 0.23, y = 2.1, label = "paste(italic(p), \" = 0.000117 \")",parse=T)+
+  annotate("text", x = 0.23, y = 1.969, label = "Est. slope = 0.94")
+data_plot=data.frame(species=lfh$Species_plot,
+                     y=lfh$div,
+                     x=est_species$Output8,
+                     x2=lfh$Parental_Care)
+m1<-betareg(I(y/100)~x,data=data_plot,link='logit')
+m1_nopc <- betareg(I(y/100)~x,data=data_plot[data_plot$x2=="No",],link='logit')
+m1_pc <- betareg(I(y/100)~x,data=data_plot[data_plot$x2=="Yes",],link='logit')
+
+data_plot$mean=fitted(m1)
+data_plot$sd_025=fitted(m1)*100-2*coefficients(summary(m1))$mean[2,2]
+data_plot$sd_975=fitted(m1)*100+2*coefficients(summary(m1))$mean[2,2]
+
+fit_m1_nopc_tmp=fitted(m1_nopc)
+sd_025_m1_no_pc_tmp=fitted(m1_nopc)*100-2*coefficients(summary(m1_nopc))$mean[2,2]
+sd_975_m1_no_pc_tmp=fitted(m1_nopc)*100+2*coefficients(summary(m1_nopc))$mean[2,2]
+
+fit_m1_pc_tmp=fitted(m1_pc)
+sd_025_m1_pc_tmp=fitted(m1_pc)*100-2*coefficients(summary(m1_pc))$mean[2,2]
+sd_975_m1_pc_tmp=fitted(m1_pc)*100+2*coefficients(summary(m1_pc))$mean[2,2]
+
+data_plot_tmp=data_plot
+data_plot_tmp=data_plot_tmp[data_plot_tmp$x2=="No",]
+data_plot_tmp$mean=fitted(m1_nopc)
+data_plot_tmp$sd_025=fitted(m1_nopc)*100-2*coefficients(summary(m1_nopc))$mean[2,2]
+data_plot_tmp$sd_975=fitted(m1_nopc)*100+2*coefficients(summary(m1_nopc))$mean[2,2]
+
+data_plot_tmp2=data_plot
+data_plot_tmp2=data_plot_tmp2[data_plot_tmp2$x2=="Yes",]
+data_plot_tmp2$mean=fitted(m1_pc)
+data_plot_tmp2$sd_025=fitted(m1_pc)*100-2*coefficients(summary(m1_pc))$mean[2,2]
+data_plot_tmp2$sd_975=fitted(m1_pc)*100+2*coefficients(summary(m1_pc))$mean[2,2]
+
+min_trait=min(data_plot$x[is.na(data_plot$y)==FALSE],na.rm=T)
+max_trait=max(data_plot$x[is.na(data_plot$y)==FALSE],na.rm=T)
+diff_max_min_gen=max(data_plot$y,na.rm=T)-min(data_plot$y,na.rm=T)
+diff_max_min_trait=max_trait-min_trait
+italic_species=c("italic('C. galerita')",
+                 "italic('C. julis')",
+                 "italic('D. labrax')",
+                 "italic('D. puntazzo')",
+                 "italic('H. guttulatus')",
+                 "italic('L. budegassa')",
+                 "italic('L. mormyrus')",
+                 "italic('M. merluccius')",
+                 "italic('M. surmuletus')",
+                 "italic('P. erythrinus')",
+                 "italic('S. cabrilla')",
+                 "italic('S. cantharus')",
+                 "italic('S. cinereus')",
+                 "italic('S. pilchardus')",
+                 "italic('S. sarda')",
+                 "italic('S. typhle')")
+col=viridis(100)
+
+data_plot_whole=rbind(data_plot,data_plot_tmp)
+data_plot_whole$gg=c(rep(1,16),rep(2,11))
+data_plot_whole$gg=factor(data_plot_whole$gg)
+
+div_slim<-ggplot(data_plot_whole, 
+                 aes(x = x, 
+                     y = mean*100,
+                     label=species
+                 )) +
+  geom_line(aes(colour=gg),
+            size=1)+
+  geom_point(data=data_plot,size=2.5,
+             aes(x=x,
+                 y=y,
+                 shape=x2))+
+  geom_rangeframe()+
+  theme_classic()+
+  geom_text_repel(data=data_plot,aes(x=x,y=y),label=italic_species,col="black",parse=T)+
+  scale_x_continuous(breaks=seq(0,0.08,by=0.01),
+                     labels=as.character(seq(0,0.08,by=0.01))
+  )+
+  scale_y_continuous(breaks=seq(0,1.5,by=0.25),
+                     labels=as.character(seq(0,1.5,by=0.25)))+
+  xlab("Simulated heterozygosity (%)")+
+  ylab("")+
+  scale_color_manual(name = "Model",values=viridis(100)[c(47.5,72.5,97.5)],labels=c("Whole dataset","Only non brooding species","No parental care species"))+
+  scale_shape_manual(name = "Brooding behaviour",values=c(19, 1))+
+  theme(legend.position = "bottom")+
+  annotate("text", x = 0.015, y = 1.325, label = "paste(italic(p), \" = 0.0115 \")",parse=T)+
+  annotate("text", x = 0.015, y = 1.265, label = "paste(italic(R) ^ 2, \" = 0.4347 \")",parse=T)
+load(file="Data/forward_slim_old/est_species.Rdata")
+data_plot=data.frame(species=lfh$Species_plot,
+                     y=lfh$div,
+                     x=est_species$Output8,
+                     x2=lfh$Parental_Care)
+m1<-betareg(I(y/100)~x,data=data_plot,link='logit')
+m1_nopc <- betareg(I(y/100)~x,data=data_plot[data_plot$x2=="No",],link='logit')
+m1_pc <- betareg(I(y/100)~x,data=data_plot[data_plot$x2=="Yes",],link='logit')
+
+data_plot$mean=fitted(m1)
+data_plot$sd_025=fitted(m1)*100-2*coefficients(summary(m1))$mean[2,2]
+data_plot$sd_975=fitted(m1)*100+2*coefficients(summary(m1))$mean[2,2]
+
+fit_m1_nopc_tmp=fitted(m1_nopc)
+sd_025_m1_no_pc_tmp=fitted(m1_nopc)*100-2*coefficients(summary(m1_nopc))$mean[2,2]
+sd_975_m1_no_pc_tmp=fitted(m1_nopc)*100+2*coefficients(summary(m1_nopc))$mean[2,2]
+
+fit_m1_pc_tmp=fitted(m1_pc)
+sd_025_m1_pc_tmp=fitted(m1_pc)*100-2*coefficients(summary(m1_pc))$mean[2,2]
+sd_975_m1_pc_tmp=fitted(m1_pc)*100+2*coefficients(summary(m1_pc))$mean[2,2]
+
+data_plot_tmp=data_plot
+data_plot_tmp=data_plot_tmp[data_plot_tmp$x2=="No",]
+data_plot_tmp$mean=fitted(m1_nopc)
+data_plot_tmp$sd_025=fitted(m1_nopc)*100-2*coefficients(summary(m1_nopc))$mean[2,2]
+data_plot_tmp$sd_975=fitted(m1_nopc)*100+2*coefficients(summary(m1_nopc))$mean[2,2]
+
+data_plot_tmp2=data_plot
+data_plot_tmp2=data_plot_tmp2[data_plot_tmp2$x2=="Yes",]
+data_plot_tmp2$mean=fitted(m1_pc)
+data_plot_tmp2$sd_025=fitted(m1_pc)*100-2*coefficients(summary(m1_pc))$mean[2,2]
+data_plot_tmp2$sd_975=fitted(m1_pc)*100+2*coefficients(summary(m1_pc))$mean[2,2]
+
+min_trait=min(data_plot$x[is.na(data_plot$y)==FALSE],na.rm=T)
+max_trait=max(data_plot$x[is.na(data_plot$y)==FALSE],na.rm=T)
+diff_max_min_gen=max(data_plot$y,na.rm=T)-min(data_plot$y,na.rm=T)
+diff_max_min_trait=max_trait-min_trait
+italic_species=c("italic('C. galerita')",
+                 "italic('C. julis')",
+                 "italic('D. labrax')",
+                 "italic('D. puntazzo')",
+                 "italic('H. guttulatus')",
+                 "italic('L. budegassa')",
+                 "italic('L. mormyrus')",
+                 "italic('M. merluccius')",
+                 "italic('M. surmuletus')",
+                 "italic('P. erythrinus')",
+                 "italic('S. cabrilla')",
+                 "italic('S. cantharus')",
+                 "italic('S. cinereus')",
+                 "italic('S. pilchardus')",
+                 "italic('S. sarda')",
+                 "italic('S. typhle')")
+col=viridis(100)
+
+data_plot_whole=rbind(data_plot,data_plot_tmp)
+data_plot_whole$gg=c(rep(1,16),rep(2,11))
+data_plot_whole$gg=factor(data_plot_whole$gg)
+
+div_slim<-ggplot(data_plot_whole, 
+                 aes(x = x, 
+                     y = mean*100,
+                     label=species
+                 )) +
+  geom_line(aes(colour=gg),
+            size=1)+
+  geom_point(data=data_plot,size=2.5,
+             aes(x=x,
+                 y=y,
+                 shape=x2))+
+  geom_rangeframe()+
+  theme_classic()+
+  geom_text_repel(data=data_plot,aes(x=x,y=y),label=italic_species,col="black",parse=T)+
+  scale_x_continuous(breaks=seq(0,0.08,by=0.01),
+                     labels=as.character(seq(0,0.08,by=0.01))
+  )+
+  scale_y_continuous(breaks=seq(0,1.5,by=0.25),
+                     labels=as.character(seq(0,1.5,by=0.25)))+
+  xlab("Simulated heterozygosity (%)")+
+  ylab("")+
+  scale_color_manual(name = "Model",values=viridis(100)[c(47.5,72.5,97.5)],labels=c("Whole dataset","Only non brooding species","No parental care species"))+
+  scale_shape_manual(name = "Brooding behaviour",values=c(19, 1))+
+  theme(legend.position = "bottom")+
+  annotate("text", x = 0.015, y = 1.325, label = "paste(italic(p), \" = 0.0115 \")",parse=T)+
+  annotate("text", x = 0.015, y = 1.265, label = "paste(italic(R) ^ 2, \" = 0.4347 \")",parse=T)
+sim=8
+compare_het=data.frame(SP1=c(NA),
+                       SP2=c(NA),
+                       ratio_mean=c(NA),
+                       ratio_truehet=c(NA))
+
+Sp=c("Lbude","Hgutt","Dlabr","Scant","Dpunt","Lmorm","Cgale","Scine","Mmerl","Ssard","Styph","Peryt",
+     "Msurm","Cjuli","Scabr","Spilc")
+
+for (j in 1:(nrow(est_species)-1)){
+  for (k in (j+1):nrow(est_species)){
+    vect=c(as.character(Sp[j]),
+           as.character(Sp[k]),
+           round(est_species[which(est_species$Species==Sp[j]),sim+1]/est_species[which(est_species$Species==Sp[k]),sim+1],3),
+           round(div[which(names(div)==Sp[j])]/div[which(names(div)==Sp[k])],3))
+    compare_het=rbind(compare_het,vect)
+  }
+}
+compare_het=compare_het[-1,]
+compare_het$ratio_mean=as.numeric(compare_het$ratio_mean)
+compare_het$ratio_truehet=as.numeric(compare_het$ratio_truehet)
+# Parental care
+compare_het_stat=compare_het
+fit<-lm(compare_het_stat$ratio_mean~compare_het_stat$ratio_truehet)
+
+pairwise_slim<-ggplot(compare_het_stat[compare_het_stat$ratio_mean<10,],aes(ratio_truehet,ratio_mean))+
+  theme_classic()+
+  geom_rangeframe()+
+  geom_point(size=2)+
+  geom_smooth(method="lm",fullrange="T")+
+  geom_abline(intercept=0,slope=1,col="red")+
+  xlab("")+
+  ylab("")+
+  ylim(c(0,max(compare_het_stat[compare_het_stat$ratio_mean<10,]$ratio_mean)))+
+  xlim(c(0,1))+
+  ggtitle("Whole dataset")+
+  annotate("text", x = 0.225, y = 5.85, label = "paste(italic(p), \" = 0.0476 \")",parse=T)+
+  annotate("text", x = 0.25, y = 5.4, label = "Est. slope = 0.7329")
+
+# No parental care
+compare_het_stat=compare_het
+compare_het_stat=compare_het_stat[compare_het_stat$SP1!="Hgutt",]
+compare_het_stat=compare_het_stat[compare_het_stat$SP2!="Hgutt",]
+compare_het_stat=compare_het_stat[compare_het_stat$SP1!="Scine",]
+compare_het_stat=compare_het_stat[compare_het_stat$SP2!="Scine",]
+compare_het_stat=compare_het_stat[compare_het_stat$SP1!="Styph",]
+compare_het_stat=compare_het_stat[compare_het_stat$SP2!="Styph",]
+compare_het_stat=compare_het_stat[compare_het_stat$SP1!="Cgale",]
+compare_het_stat=compare_het_stat[compare_het_stat$SP2!="Cgale",]
+compare_het_stat=compare_het_stat[compare_het_stat$SP1!="Scant",]
+compare_het_stat=compare_het_stat[compare_het_stat$SP2!="Scant",]
+
+fit<-lm(compare_het_stat$ratio_mean~compare_het_stat$ratio_truehet)
+
+pairwise_slim_nopc<-ggplot(compare_het_stat,aes(ratio_truehet,ratio_mean))+
+  theme_classic()+
+  geom_rangeframe()+
+  geom_point(size=2)+
+  geom_smooth(method="lm",fullrange="T")+
+  geom_abline(intercept=0,slope=1,col="red")+
+  xlab("")+
+  ylab("")+
+  ylim(c(0,max(compare_het_stat$ratio_mean)))+
+  xlim(c(0,1))+
+  ggtitle("Only non brooding species")+
+  annotate("text", x = 0.225, y = 2.7, label = "paste(italic(p), \" = 0.00357 \")",parse=T)+
+  annotate("text", x = 0.25, y = 2.5, label = "Est. slope = 0.9493")
+
+
 corr_plot<-ggarrange(div_agene,div_slim,labels=c("A","B"),common.legend = T, legend='top')                                    
 corr_plot<-annotate_figure(corr_plot,
                            left = text_grob("Observed heterozygosity (%)",rot = 90,vjust=2.5),
@@ -328,10 +894,10 @@ pdf(paste(wd,"/figures/vk_plot.pdf",sep=""),width=12,height=7.5)
 print(all_plot)
 dev.off()
 
-surv_fec<-ggarrange(
-  surv_plot,
-  fecun_plot,
-  nrow=2)
-pdf(paste(wd,"/figures/sur_fec.pdf",sep=""),width=12,height=7.5)
-print(surv_fec)
-dev.off()
+#surv_fec<-ggarrange(
+#  surv_plot,
+#  fecun_plot,
+#  nrow=2)
+#pdf(paste(wd,"/figures/sur_fec.pdf",sep=""),width=12,height=7.5)
+#print(surv_fec)
+#dev.off()
