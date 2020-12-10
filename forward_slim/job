@@ -1,0 +1,9 @@
+#!/bin/sh
+#BATCH --job-name=simu
+#SBATCH -o simu.out
+#SBATCH -e simu.err
+#SBATCH --time=24:00:0
+
+module load snakemake/5.3.0
+module load python/3.7
+snakemake --snakefile forward_slim/snakefile --cluster "sbatch -c 1 --time=24:00:00" -j 300 -k

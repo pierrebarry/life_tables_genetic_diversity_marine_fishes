@@ -1,0 +1,99 @@
+import os
+import numpy as np
+from itertools import product
+
+test=0
+if test==1:
+    SAMPLES=['SpilcFa1']
+    SPECIES=['Spilc']
+else: 
+    SPECIES=['Spilc','Hgutt','Mmerl','Scabr','Dlab','Msurm',
+             'Lmorm','Dpunt','Peryt','Cjuli','Ssard','Cgale',
+             'Scine','Lbude','Styph','Scant']
+    LOCA=['Li','Mu','Fa','Ga']
+    NUMBER=['1','2','3','4','5','6']
+    
+    SAMPLES=[]
+    for i in range(24):
+        for j in range(4):
+            for k in range(6):
+                SAMPLES+=[SPECIES[i]+LOCA[j]+NUMBER[k]]
+  
+
+SAMPLES=[SAMPLES[i] for i in range(24*6*4) if os.path.exists('/share/tycho_poolz1/pagagnaire/backup/COGEDIV_Save/50-202125337/'+SAMPLES[i]+'_R1_001.fastq.gz')==True]
+SPECIES=['Spilc','Mmerl','Scabr','Dlab','Msurm','Lmorm','Peryt','Ssard','Lbude']
+
+
+def filter_combinator(combinator, blacklist):
+    def filtered_combinator(*args, **kwargs):
+        for wc_comb in combinator(*args, **kwargs):
+            # Use frozenset instead of tuple
+            # in order to accomodate
+            # unpredictable wildcard order
+            if frozenset(wc_comb) not in blacklist:
+                yield wc_comb
+    return filtered_combinator
+
+forbidden={'start'}
+for i in range(len(SPECIES)):
+    for j in range(len(SAMPLES)):
+        if SPECIES[i]!=SAMPLES[j][0:5]:
+            if SAMPLES[j][0:4]=="Dlab":
+                if SPECIES[i]!=SAMPLES[j][0:4]:
+                    forbidden|={frozenset({("sample",SAMPLES[j]),("species",SPECIES[i])})}
+            else:
+                forbidden|={frozenset({("sample",SAMPLES[j]),("species",SPECIES[i])})}
+
+forbidden.remove('start')
+filtered_product = filter_combinator(product, forbidden)
+
+## Fichier de sortie
+rule all:  
+	input:
+		expand("/share/tycho_poolz1/pagagnaire/COGEDIV/pbarry/{species}/fastp/{sample}_R1_fastp.fastq.gz",filtered_product,sample=SAMPLES,species=SPECIES),
+		expand("/share/tycho_poolz1/pagagnaire/COGEDIV/pbarry/{species}/fastp/{sample}_R2_fastp.fastq.gz",filtered_product,sample=SAMPLES,species=SPECIES),
+        	expand("/share/tycho_poolz1/pagagnaire/COGEDIV/pbarry/{species}/fastp/fastp_report_{sample}.html",filtered_product,sample=SAMPLES,species=SPECIES),
+        	expand("/share/tycho_poolz1/pagagnaire/COGEDIV/pbarry/{species}/fastp/fastp_report_{sample}.json",filtered_product,sample=SAMPLES,species=SPECIES)
+		
+## Fastp
+rule process_fastp:
+	input:
+		raw_R1="/share/tycho_poolz1/pagagnaire/backup/COGEDIV_Save/50-202125337/{sample}_R1_001.fastq.gz",
+		raw_R2="/share/tycho_poolz1/pagagnaire/backup/COGEDIV_Save/50-202125337/{sample}_R2_001.fastq.gz"
+	output:
+        	fastp_R1="/share/tycho_poolz1/pagagnaire/COGEDIV/pbarry/{species}/fastp/{sample}_R1_fastp.fastq.gz",
+        	fastp_R2="/share/tycho_poolz1/pagagnaire/COGEDIV/pbarry/{species}/fastp/{sample}_R2_fastp.fastq.gz",
+        	report_html="/share/tycho_poolz1/pagagnaire/COGEDIV/pbarry/{species}/fastp/fastp_report_{sample}.html",
+        	report_json="/share/tycho_poolz1/pagagnaire/COGEDIV/pbarry/{species}/fastp/fastp_report_{sample}.json"
+	message:
+		"Fastp processing : {wildcards.sample}"
+	shell : 
+        	"fastp "
+        	"-i {input.raw_R1} "
+        	"-I {input.raw_R2} "
+        	"-o {output.fastp_R1} "
+        	"-O {output.fastp_R2} "
+        	"--trim_poly_g "
+        	"--correction "
+        	"--low_complexity_filter "
+        	"--html {output.report_html} "
+        	"--json {output.report_json} "
+        	"--report_title {wildcards.sample} "
+        	"--thread 8 "
+		"--dont_overwrite && "
+        	"python fastp/Extract_fastp_info.py {wildcards.species} {wildcards.sample}"
+
+        
+       
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        

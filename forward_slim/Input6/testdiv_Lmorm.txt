@@ -1,0 +1,82 @@
+initialize() {
+ initializeSLiMModelType("nonWF");
+defineConstant("Surv_male",c(0.6,0.48,0.4,0.36,0.34,0.31,0.29,0.26,0.25,1));
+defineConstant("Surv_female",c(0.57,0.48,0.39,0.36,0.34,0.31,0.28,0.26,0.24,0.24,0.26,0.18,1));
+ defineConstant("f",c(0,100,100,100,100,100,100,100,100,100,100,100,100));
+defineConstant("AgeMat_Female",1);
+defineConstant("AgeMat_Male",1);
+ initializeMutationType("m1", 0.5, "f", 0.0);
+ initializeGenomicElementType("g1", m1, 1.0);
+ initializeGenomicElement(g1, 0, L);
+ initializeMutationRate(mu);
+ initializeRecombinationRate(rec);
+ initializeSex("A");
+}
+
+reproduction(NULL,"F") {
+	if (individual.age>=AgeMat_Female){
+		litterSize=rpois(1,f[individual.age]);
+		for (j in seqLen(litterSize)){
+			mate=subpop.sampleIndividuals(1,sex="M",minAge=AgeMat_Male);
+			subpop.addCrossed(individual,mate);
+		}
+	}
+}
+
+1 early() {
+sim.addSubpop("p1", K);
+p1.individuals.age = rdunif(K, min=0, max=size(Surv_male)-1);
+} 
+
+early() {
+// life table based individual mortality
+ inds = p1.individuals;
+ ages = inds.age;
+ mortality=rep(0.0,size(ages));
+ mortality[p1.individuals.sex=="M"]=Surv_male[ages[p1.individuals.sex=="M"]];
+ mortality[p1.individuals.sex=="F"]=Surv_female[ages[p1.individuals.sex=="F"]];
+ survival = 1 - mortality;
+ inds.fitnessScaling = survival;
+// density-dependence, factoring in individual mortality
+ //p1.fitnessScaling = K /(size(p1.individuals[p1.individuals.age>=(AgeMat-1)]) * mean(survival[p1.individuals.age>=(AgeMat-1)]));
+ p1.fitnessScaling = K / (p1.individualCount * mean(survival));
+} 
+
+late() {
+
+if (sim.generation % register_each == 0) {
+
+// Calculate mean nucleotide heterozygosity across the population
+ total = 0.0;
+for (ind in p1.individuals)
+ {
+ 
+ // Calculate the nucleotide heterozygosity of this individual
+ muts0 = ind.genomes[0].mutations;
+ muts1 = ind.genomes[1].mutations;
+
+ // Count the shared mutations
+ shared_count = sum(match(muts0, muts1) >= 0);
+ 
+ // All remaining mutations are unshared (i.e. heterozygous)
+ unshared_count = muts0.size() + muts1.size() - 2 * shared_count;
+
+ // pi is the mean heterozygosity across the chromosome
+ pi_ind = unshared_count / (sim.chromosome.lastPosition + 1);
+ total = total + pi_ind;
+ }
+ pi = total / p1.individuals.size();
+ 
+ line=paste(pi*100);
+ writeFile("/shared/projects/abc_fish/forward_slim/Output6/div_Lmorm_"+K+"_"+iter+".txt", line, append=T);
+ line=paste(size(p1.individuals[(p1.individuals.sex=="M" & p1.individuals.age>=(AgeMat_Male-1)) | (p1.individuals.sex=="F" & p1.individuals.age>=(AgeMat_Female-1))]));
+ writeFile("/shared/projects/abc_fish/forward_slim/Output6/popadult_Lmorm_"+K+"_"+iter+".txt", line, append=T);
+ line=paste(p1.individuals.size());
+ writeFile("/shared/projects/abc_fish/forward_slim/Output6/poptotal_Lmorm_"+K+"_"+iter+".txt", line, append=T);
+
+}
+
+ 
+}
+
+25000 late() {sim.simulationFinished();} 

@@ -1,0 +1,153 @@
+## IMPORT PACKAGES
+
+import os
+from itertools import product
+
+## COMPUTE COMBINATION OF SAMPLES AND SPECIES
+
+test=0
+if test==1:
+    SAMPLES=['SpilcFa1']
+    SPECIES=['Spilc']
+else: 
+    SPECIES=['Spilc','Hgutt','Mmerl','Scabr','Dlab','Msurm',
+             'Lmorm','Dpunt','Peryt','Cjuli','Ssard','Cgale'
+             'Scine','Lbude','Styph','Scant']
+    LOCA=['Li','Mu','Fa','Ga']
+    NUMBER=['1','2','3','4','5','6','7','8','9','10','11','12']
+    SS=[str(i).zfill(1) for i in range(1,85)]
+    SAMPLES=[]
+    for i in range(21):
+        for j in range(4):
+            for k in range(12):
+                for s in range(0,84):
+                    SAMPLES+=[SPECIES[i]+LOCA[j]+NUMBER[k]+'_S'+SS[s]]
+    
+    SAMPLES_1=[SAMPLES[i] for i in range(len(SAMPLES)) if os.path.exists('/share/tycho_poolz1/pagagnaire/backup/COGEDIV_Save/NovaSeq6000_S4_COGEDIV_Run1_50-202125337_WGS/'+SAMPLES[i]+'_R1_001.fastq.gz')==True] 
+    SAMPLES_2=[SAMPLES[i] for i in range(len(SAMPLES)) if os.path.exists('/share/tycho_poolz1/pagagnaire/backup/COGEDIV_Save/NovaSeq6000_S1_COGEDIV_Run3_50-269619446_10X/50-269605115/'+SAMPLES[i]+'_R1_001.fastq.gz')==True]
+    SAMPLES_3=[SAMPLES[i] for i in range(len(SAMPLES)) if os.path.exists('/share/tycho_poolz1/pagagnaire/backup/COGEDIV_Save/NovaSeq6000_S4_COGEDIV_Run5_123_AHGVJJDSXY_WGS/'+SAMPLES[i]+'_R1_001.fastq.gz')==True]
+    
+    for i in range(len(SAMPLES_1)):
+        if SAMPLES_1[i][0:4]=="Dlab":
+           SAMPLES_1[i]=str("Dlabr"+SAMPLES_1[i][4:6]+SAMPLES_1[i][6])
+    
+    SAMPLES=SAMPLES_1+SAMPLES_2+SAMPLES_3
+    for i in range(len(SAMPLES)):
+        if SAMPLES[i][0:9]=="HguttGa10" or SAMPLES[i][0:9]=="HguttGa11" or SAMPLES[i][0:9]=="HguttGa12":
+           SAMPLES[i]=SAMPLES[i][0:9]
+        else:
+           SAMPLES[i]=SAMPLES[i][0:8]
+    print(SAMPLES)
+    SPECIES=['Spilc','Hgutt','Mmerl','Scabr','Dlabr','Msurm',
+             'Lmorm','Dpunt','Peryt','Cjuli','Ssard','Cgale'
+             'Scine','Lbude','Styph','Scant']
+    
+    def filter_combinator(combinator, blacklist):
+        def filtered_combinator(*args, **kwargs):
+            for wc_comb in combinator(*args, **kwargs):
+                # Use frozenset instead of tuple
+                # in order to accomodate
+                # unpredictable wildcard order
+                if frozenset(wc_comb) not in blacklist:
+                   yield wc_comb
+        return filtered_combinator
+    
+    forbidden={'start'}
+    for i in range(len(SPECIES)):
+        for j in range(len(SAMPLES)):
+            if SPECIES[i]!=SAMPLES[j][0:5]:
+               forbidden|={frozenset({("sample",SAMPLES[j]),("species",SPECIES[i])})}
+
+    
+    forbidden.remove('start')
+    filtered_product = filter_combinator(product, forbidden)
+
+print(SAMPLES)
+print(SPECIES)
+## SNAKEMAKE PROCESS
+
+#All
+rule all:
+	input:
+		histo_jellyfish=expand("/share/tycho_poolz1/pagagnaire/COGEDIV/pbarry/{species}/GenomeScope/{sample}_histo_jellyfish.histo",filtered_product,sample=SAMPLES,species=SPECIES),
+		plot_genomescope=expand("/share/tycho_poolz1/pagagnaire/COGEDIV/pbarry/{species}/GenomeScope/{sample}_plot.pdf",filtered_product,sample=SAMPLES,species=SPECIES),
+		plotlog_genomescope=expand("/share/tycho_poolz1/pagagnaire/COGEDIV/pbarry/{species}/GenomeScope/{sample}_plot.log.pdf",filtered_product,sample=SAMPLES,species=SPECIES),
+		model_genomescope=expand("/share/tycho_poolz1/pagagnaire/COGEDIV/pbarry/{species}/GenomeScope/{sample}_model.txt",filtered_product,sample=SAMPLES,species=SPECIES),
+		progress_genomescope=expand("/share/tycho_poolz1/pagagnaire/COGEDIV/pbarry/{species}/GenomeScope/{sample}_progress.txt",filtered_product,sample=SAMPLES,species=SPECIES),
+		summary_genomescope=expand("/share/tycho_poolz1/pagagnaire/COGEDIV/pbarry/{species}/GenomeScope/{sample}_summary.txt",filtered_product,sample=SAMPLES,species=SPECIES)
+		
+
+## K-mer process
+
+rule merge_fastq:
+	input:
+		fastp_R1="/share/tycho_poolz1/pagagnaire/COGEDIV/pbarry/{species}/fastp/{sample}_R1_fastp.fastq.gz",
+		fastp_R2="/share/tycho_poolz1/pagagnaire/COGEDIV/pbarry/{species}/fastp/{sample}_R2_fastp.fastq.gz"
+	output:
+		merge_fastq="/share/tycho_poolz1/pagagnaire/COGEDIV/pbarry/{species}/GenomeScope/{sample}_merge_fastp.fastq"
+	message:
+		"Merge fastq : {wildcards.sample}"
+	shell:
+		"cat {input.fastp_R1} {input.fastp_R2} > /share/tycho_poolz1/pagagnaire/COGEDIV/pbarry/{wildcards.species}/GenomeScope/{wildcards.sample}_merge_fastp.fastq.gz && "
+		"gzip -d /share/tycho_poolz1/pagagnaire/COGEDIV/pbarry/{wildcards.species}/GenomeScope/{wildcards.sample}_merge_fastp.fastq.gz"
+
+rule jellyfish_process:
+	input:
+		merge_fastq="/share/tycho_poolz1/pagagnaire/COGEDIV/pbarry/{species}/GenomeScope/{sample}_merge_fastp.fastq"
+	output:
+		reads_jellyfish="/share/tycho_poolz1/pagagnaire/COGEDIV/pbarry/{species}/GenomeScope/{sample}_reads_jellyfish"
+	message:
+		"Jellyfish processing - Counting k-mer : {wildcards.sample}"
+	shell : 
+		"jellyfish "
+		"count -C "
+		"-m 21 "
+		"-s 1000000 "
+		"-t 8 "
+		"{input.merge_fastq} "
+		"-o {output.reads_jellyfish}"
+
+rule jellyfish_histogram:
+	input:
+		reads_jellyfish="/share/tycho_poolz1/pagagnaire/COGEDIV/pbarry/{species}/GenomeScope/{sample}_reads_jellyfish"
+	output:
+		histo_jellyfish="/share/tycho_poolz1/pagagnaire/COGEDIV/pbarry/{species}/GenomeScope/{sample}_histo_jellyfish.histo"
+	message:
+		"Jellyfish processing - Exporting the histogram : {wildcards.sample}"
+	shell : 
+		"jellyfish "
+		"histo "
+		"-t 10 "
+		"{input.reads_jellyfish} > {output.histo_jellyfish} && "
+		"rm /share/tycho_poolz1/pagagnaire/COGEDIV/pbarry/{wildcards.species}/GenomeScope/{wildcards.sample}_reads_jellyfish && "
+		"rm /share/tycho_poolz1/pagagnaire/COGEDIV/pbarry/{wildcards.species}/GenomeScope/{wildcards.sample}_merge_fastp.fastq"
+
+rule GenomeScope:
+	input:
+		histo_jellyfish="/share/tycho_poolz1/pagagnaire/COGEDIV/pbarry/{species}/GenomeScope/{sample}_histo_jellyfish.histo"
+	output:
+		plot_genomescope="/share/tycho_poolz1/pagagnaire/COGEDIV/pbarry/{species}/GenomeScope/{sample}_plot.pdf",
+		model_genomescope="/share/tycho_poolz1/pagagnaire/COGEDIV/pbarry/{species}/GenomeScope/{sample}_model.txt",
+		plotlog_genomescope="/share/tycho_poolz1/pagagnaire/COGEDIV/pbarry/{species}/GenomeScope/{sample}_plot.log.pdf",
+		progress_genomescope="/share/tycho_poolz1/pagagnaire/COGEDIV/pbarry/{species}/GenomeScope/{sample}_progress.txt",
+		summary_genomescope="/share/tycho_poolz1/pagagnaire/COGEDIV/pbarry/{species}/GenomeScope/{sample}_summary.txt"
+	message:
+		"GenomeScope processing - Fitting the model : {wildcards.sample}"
+	shell:
+		"mv {input.histo_jellyfish} ~ && "
+		"module load R && "
+		"R --vanilla --slave --args "
+		"{wildcards.sample}_histo_jellyfish.histo "
+		"21 "
+		"150 "
+		"OutputGenomeScope "
+		"10000 "
+		"Summary "
+		"{wildcards.sample} "
+		"< ~/GenomeScope/genomescope_cluster.R && "
+		"mv OutputGenomeScope/model.txt {output.model_genomescope} && "
+		"mv OutputGenomeScope/plot.log.pdf {output.plotlog_genomescope} && "
+		"mv OutputGenomeScope/plot.pdf {output.plot_genomescope} && "
+		"mv OutputGenomeScope/progress.txt {output.progress_genomescope} && "
+		"mv OutputGenomeScope/summary.txt {output.summary_genomescope} && "
+		"mv {wildcards.sample}_histo_jellyfish.histo /share/tycho_poolz1/pagagnaire/COGEDIV/pbarry/{wildcards.species}/GenomeScope"			

@@ -1,0 +1,78 @@
+initialize() {
+ initializeSLiMModelType("nonWF");
+defineConstant("Surv",c(0.46,0.46,0.46,0.46,0.46,0.46,1));
+ defineConstant("f",c(0,100,100,100,100,100,100));
+defineConstant("AgeMat",1);
+ initializeMutationType("m1", 0.5, "f", 0.0);
+ initializeGenomicElementType("g1", m1, 1.0);
+ initializeGenomicElement(g1, 0, L);
+ initializeMutationRate(mu);
+ initializeRecombinationRate(rec);
+ initializeSex("A");
+}
+
+reproduction(NULL,"F") {
+	if (individual.age>=AgeMat){
+		litterSize=rpois(1,f[individual.age]);
+		for (j in seqLen(litterSize)){
+			mate=subpop.sampleIndividuals(1,sex="M",minAge=AgeMat);
+			subpop.addCrossed(individual,mate);
+		}
+	}
+}
+
+1 early() {
+sim.addSubpop("p1", K);
+p1.individuals.age = rdunif(K, min=0, max=size(Surv)-1);
+} 
+
+
+early() {
+// life table based individual mortality
+ inds = p1.individuals;
+ ages = inds.age;
+ mortality = Surv[ages];
+ survival = 1 - mortality;
+ inds.fitnessScaling = survival;
+// density-dependence, factoring in individual mortality
+ //p1.fitnessScaling = K /(size(p1.individuals[p1.individuals.age>=(AgeMat-1)]) * mean(survival[p1.individuals.age>=(AgeMat-1)]));
+ p1.fitnessScaling = K / (p1.individualCount * mean(survival));
+} 
+
+late() {
+
+if (sim.generation % register_each == 0) {
+
+// Calculate mean nucleotide heterozygosity across the population
+ total = 0.0;
+for (ind in p1.individuals)
+ {
+ // Calculate the nucleotide heterozygosity of this individual
+ muts0 = ind.genomes[0].mutations;
+ muts1 = ind.genomes[1].mutations;
+
+ // Count the shared mutations
+ shared_count = sum(match(muts0, muts1) >= 0);
+ 
+ // All remaining mutations are unshared (i.e. heterozygous)
+ unshared_count = muts0.size() + muts1.size() - 2 * shared_count;
+
+ // pi is the mean heterozygosity across the chromosome
+ pi_ind = unshared_count / (sim.chromosome.lastPosition + 1);
+ total = total + pi_ind;
+ }
+ pi = total / p1.individuals.size();
+ 
+ line=paste(pi*100);
+ writeFile("/shared/projects/abc_fish/forward_slim//Output1/div_Cgale_"+K+"_"+iter+".txt", line, append=T);
+ line=paste(size(p1.individuals[p1.individuals.age>=(AgeMat-1)]));
+ writeFile("/shared/projects/abc_fish/forward_slim/Output1/popadult_Cgale_"+K+"_"+iter+".txt", line, append=T);
+ line=paste(p1.individuals.size());
+ writeFile("/shared/projects/abc_fish/forward_slim/Output1/poptotal_Cgale_"+K+"_"+iter+".txt", line, append=T);
+
+}
+
+ 
+}
+
+25000 late() {sim.simulationFinished();} 

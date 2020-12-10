@@ -42,6 +42,8 @@ source(file=paste(code_file,"SLiM_analysis.R",sep=""))
 source(file=paste(code_file,"sim_lifetime.R",sep=""))
 # Analyses of simulated life tables output ----
 source(file=paste(code_file,"sim_lifetime_analysis.R",sep=""))
+# Plot life tables of the species ----
+source(file=paste(code_file,"plot_age_surv_fec.R",sep=""))
 # Plot figure of the main text of the paper ----
 source(file=paste(code_file,"main_figure.R",sep=""))
 # RMARKDOWN ----

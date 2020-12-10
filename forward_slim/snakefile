@@ -1,0 +1,101 @@
+#SPECIES=['Spilc','Hgutt','Mmerl','Scabr','Dlabr','Msurm','Lmorm','Dpunt']
+#SPECIES=['Peryt','Cjuli','Ssard','Cgale','Scine','Lbude','Styph','Scant']
+
+SPECIES=[
+	'Spilc',
+	'Hgutt',
+	'Mmerl',	
+	'Scabr',
+	'Dlabr',
+	'Msurm',
+	'Lmorm',
+	'Dpunt',
+	'Peryt',
+	'Cjuli',
+	'Ssard',
+	'Cgale',
+	'Scine',
+	'Lbude',
+	'Styph',
+	'Scant'
+	]
+
+
+SIMULATION = [
+		1,
+		2,	
+		3,
+		4,
+		5,
+		6,
+		7
+		#8,	
+		#9,
+		#10,	
+		#11,
+		#12,
+		#13,
+		#14,
+		#15,
+		#16
+		]
+ITERATION = range(50)
+
+NUM=[
+	1,
+	2,
+	3,
+	4,
+	5,
+	6,
+	7,
+	8,
+	9,
+	10,
+	11,
+	12,
+	13,
+	14,
+	15,
+	16
+		]
+
+C=[
+	#"c01",
+	"c1",
+	"c10"
+		]
+
+rule all:
+	input:
+		expand("/shared/projects/abc_fish/forward_slim/Output{sim}/div_{sp}_2000_{itera}.txt",sp=SPECIES,sim=SIMULATION,itera=ITERATION)
+		#expand("/shared/projects/abc_fish/sim_lifetime_slim/{c}/div_{num}_2000_{itera}.txt",c=C,num=NUM,itera=ITERATION)
+
+rule K2000:
+	input:
+		input="forward_slim/Input{sim}/testdiv_{sp}.txt"
+	output:
+		div="/shared/projects/abc_fish/forward_slim/Output{sim}/div_{sp}_2000_{itera}.txt"
+	params:
+		L=999999,
+		K=2000,
+		mu=1e-7,
+		rec=0,
+		register_each=100
+	shell:
+		"SLiM/build/slim -t -m -d K={params.K} -d L={params.L} -d iter={wildcards.itera} -d mu={params.mu} -d rec={params.rec} -d register_each={params.register_each} {input.input}"
+
+rule sim_lifetime:
+	input:
+		input="/shared/projects/abc_fish/sim_lifetime_slim/Input/{c}/testdiv_{num}.txt"
+	output:
+		div_sim="/shared/projects/abc_fish/sim_lifetime_slim/{c}/div_{num}_2000_{itera}.txt"
+	params:
+		L=999999,
+		K=2000,
+		mu=1e-7,
+		rec=0,
+		register_each=100
+	shell:
+                "SLiM/build/slim -t -m -d K={params.K} -d L={params.L} -d iter={wildcards.itera} -d mu={params.mu} -d rec={params.rec} -d register_each={params.register_each} {input.input}"
+
