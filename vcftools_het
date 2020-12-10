@@ -1,0 +1,9 @@
+# Compute individual diversity values for Dlabr
+cd /share/tycho_poolz1/pagagnaire/COGEDIV/pbarry/Dlabr/VCF
+vcftools --gzvcf Dlabr_joint_gvcf_first.vcf.gz --het --out diversity_Dlabr
+
+# Compute individual diversity values for Spilc
+cd /share/tycho_poolz1/pagagnaire/COGEDIV/pbarry/Spilc/VCF/
+head -n 100 ../Reference_Genome/interval_Spilc.list > sub_chr.list
+/home/pbarry/.pyenv/versions/miniconda3-3.9.1/bin/gatk SelectVariants -V Spilc_joint_gvcf_first.vcf.gz -L sub_chr.list -O Spilc_sub.vcf.gz
+vcftools --gzvcf Spilc_sub.vcf.gz --het --out het_Spilc
