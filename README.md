@@ -1,19 +1,21 @@
-# Life tables drive genetic diversity in marine fishes
+# :fish: Life tables drive genetic diversity in marine fishes  :fish:
 
+:fish:
 Scripts and files to generate results and output of the article 
+:fish:
 
 > Barry P., Broquet T., Gagnaire P.-A., 2021. Life tables drive genetic diversity in marine fishes. Evolution Letters
 
 ## Sampling information
 
-Files:
+:file_folder: Files:
 - `sampling.Rdata`: sampling information of sequenced individuals readable in R
 - `Data/GENETIC_DIVERSITY_DATA.xlsx` (sheet : SAMPLING) : sampling information of sequenced invidiausl readable in Excel format.
 - Various `Data/*.png` files representing the 16 species of the study from Iglesias, S. (2013). Actinopterygians from the North-Eastern Atlantic and the Mediterranean (A 750
 Natural Classification Based on Collection Specimens, with DNA Barcodes and Standardized 751
 Photographs), Volume I (Plates), Provisional Version 09. (reproduced with permission).
 
-Scripts:
+:bar_chart: Scripts:
 - `Data/sampling_map.R` : display sampling locations of all individuals
 
 ## Pre-processing fasta files
@@ -33,7 +35,7 @@ fastp -i {INPUT.R1} -I {INPUT.R2} -o {OUTPUT.FASTP_R1} -O {OUTPUT.FASTP_R2} --tr
 
 Files :
 - `Data/Summary_GenomeScope.txt` : output of individual genome-wide statistics estimates with GenomeScope.
-- `Data/Sensibility_test.Rdata` : test of choice of $k$ in jellyfish on the estimation of individual genetic diversity readable in R.
+- `Data/Sensibility_test.Rdata` : test of choice of k in jellyfish on the estimation of individual genetic diversity readable in R.
 - `Data/diversity_Dlabr.het` : estimate of individual genome-wide genetic diversity with vcftools after mapping to reference genome and variant calling with GATK.
 - `Data/het_Spilc.het` : estimate of individual genome-wide genetic diversity with vcftools after mapping to reference genome and variant calling with GATK.
 - `samtools/*_flagstat.txt` and `samtools/*_samtools_stats.stats` : individual statistics of mapping statistics.
@@ -45,7 +47,7 @@ jellyfish count -C -m 21 -s 1000000 -t 8 {INPUT.FASTQ} -o {OUTPUT.JELLYFISH}
 jellyfish histo -t 10 {INPUT.JELLYFISH} > {OUTPUT.HISTO}
 R --vanilla --slave --args {OUTPUT.HISTO} 21 150 OutputGenomeScope 1000000 Summary {SAMPLE} < ~/GenomeScope/genomescope_cluster.R
 ```
-- `genomescope_cluster.R` : `GenomeScope` algorithm to estimate individual genetic diversity (adapted from original scripts available [here](github.com/schatzlab/genomescope) and published in Vurture, G. W., Sedlazeck, F. J., Nattestad, M., Underwood, C. J., Fang, H., Gurtowski, J., and Schatz, M. C. (2017). GenomeScope : Fast reference-free genome profiling from shortreads. Bioinformatics, 33(14) :2202–2204) 
+- `genomescope_cluster.R` : `GenomeScope` algorithm to estimate individual genetic diversity (adapted from original scripts available [here](https://github.com/schatzlab/genomescope) and published in Vurture, G. W., Sedlazeck, F. J., Nattestad, M., Underwood, C. J., Fang, H., Gurtowski, J., and Schatz, M. C. (2017). GenomeScope : Fast reference-free genome profiling from shortreads. Bioinformatics, 33(14) :2202–2204) 
 - `genomescope.R` : display individual estimated and standard deviation of genome-wide genetic diversity, genome length, genome unique length, genome repeat length and model fit estimated by  `GenomeScope`
 - `historical_contingencies.R` : heatmap clustering of intraspecific variance in genetic diversity.
 - `Snakefile_samtools_GATK` : snakefile running mapping, marking duplicates and variant calling.
@@ -65,7 +67,7 @@ Scripts :
 ## Estimation Ne/N and correlation with genetic diversity 
 
 Files :
-- GENETIC_DIVERSITY_DATA.xlsx (sheet : SLiM) : life tables characteristics of the  species
+- `GENETIC_DIVERSITY_DATA.xlsx` (sheet : SLiM) : life tables characteristics of the  species
 
 Scripts :
 - `plot_age_surv_fec.R` : show  sex-specific age-specific survival and fecundity, cumulative survival for the 16 species retrieving from the litterature.
@@ -80,8 +82,8 @@ Files :
 - `agene/agene_output.Rdata` : species estimate of variance in reproductive success for each life tables characteristcis.
 
 Scripts :
--`Data/agene.R` : creates input and run `AgeNe` from life tables. 
--`agene_analysis.R` : estimate of Ne/N from `AgeNe` simulations and correlates with species genetic diversity.
+- `Data/agene.R` : creates input and run `AgeNe` from life tables. 
+- `agene_analysis.R` : estimate of Ne/N from `AgeNe` simulations and correlates with species genetic diversity.
 
 ### SLiM
 
@@ -103,14 +105,14 @@ Files :
 - `sim_lifetime/AgeNe.exe` : AgeNe algorithm from Waples, R. S., Do, C., and Chopelet, J. (2011). Calculating Ne and Ne/N in age-structured populations : A hybrid Felsenstein-Hill approach. Ecology, 92(7) :1513–1522 (download [here](https://figshare.com/articles/dataset/Supplement_1_AgeNe_a_program_to_calculate_Ne_and_Nb_in_age-structured_populations_/3551643?backTo=/collections/Calculating_i_N_i_sub_e_sub_and_i_N_i_sub_e_sub_i_N_i_in_age-structured_populations_a_hybrid_Felsenstein-Hill_approach/3304059))
 - `sim_lifetime/cogediv_sensbility.txt` : example of input of `AgeNe`
 - `sim_lifetime/output_sensibility.txt` : example of output of `AgeNe`
-- `simulation_lifetime_linear_0.01.Rdata` : Ne/N of the 16 simulated species for all the combinations of $c$ and $f$ values from linear age-fecundity model. 
-- `simulation_lifetime_exp_0.01_noscale.Rdata` : Ne/N of the 16 simulated species for all the combinations of $c$ and $f$ values from exponential age-fecundity model. 
-- `simulation_lifetime_power_0.01_noscale.Rdata` : Ne/N of the 16 simulated species for all the combinations of $c$ and $f$ values from power-law age-fecundity model. 
-- `simulation_lifetime_poly_0.01_first.Rdata` : Ne/N of the 16 simulated species for all the combinations of $c$ and $f$ values from polynomial age-fecundity model. 
+- `simulation_lifetime_linear_0.01.Rdata` : Ne/N of the 16 simulated species for all the combinations of c and f values from linear age-fecundity model. 
+- `simulation_lifetime_exp_0.01_noscale.Rdata` : Ne/N of the 16 simulated species for all the combinations of c and f values from exponential age-fecundity model. 
+- `simulation_lifetime_power_0.01_noscale.Rdata` : Ne/N of the 16 simulated species for all the combinations of c and f values from power-law age-fecundity model. 
+- `simulation_lifetime_poly_0.01_first.Rdata` : Ne/N of the 16 simulated species for all the combinations of c and f values from polynomial age-fecundity model. 
 
 Scripts :
-- `sim_lifetime.R` : generates simulated life tables and estimate $\frac{N_{e}}{N}$ with `AgeNe`
-- `sim_lifetime_analysis.R` : estimate slope between adult lifespan and $\frac{N_{e}}{N}$ estimations
+- `sim_lifetime.R` : generates simulated life tables and estimate Ne/N with `AgeNe`
+- `sim_lifetime_analysis.R` : estimate slope between adult lifespan and Ne/N estimations
 
 ## Figures
 
@@ -127,7 +129,7 @@ Scripts :
 * [jellyfish](https://github.com/gmarcais/Jellyfish)
 * [genomescope](https://github.com/schatzlab/genomescope)
 * [SLiM](https://messerlab.org/slim/)
-* [AgeNE](https://esajournals.onlinelibrary.wiley.com/doi/10.1890/10-1796.1)
+* [AgeNE](https://figshare.com/articles/dataset/Supplement_1_AgeNe_a_program_to_calculate_Ne_and_Nb_in_age-structured_populations_/3551643?backTo=/collections/Calculating_i_N_i_sub_e_sub_and_i_N_i_sub_e_sub_i_N_i_in_age-structured_populations_a_hybrid_Felsenstein-Hill_approach/3304059)
 * [snakemake](https://github.com/snakemake/snakemake)
 
 ## Youtube video
