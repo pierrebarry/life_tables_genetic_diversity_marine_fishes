@@ -452,14 +452,21 @@ if (time_code==1){
     rsquared=c(rsquared,aaa$pseudo.r.squared)
   }
   
+  sim=16
+  data_plot=data.frame(species=lfh$Species_plot,
+                       y=lfh$div,
+                       x=agene_output[[4]][,sim+3],
+                       x2=lfh$Parental_Care)
+  m1_nopc <- betareg(I(y/100)~x,data=data_plot[data_plot$x2=="No",],link='logit')
+
   dd=data.frame(x=slope)
   p<-ggplot(dd,aes(x=x)) +
     geom_density(fill="grey",alpha=0.15)+
-    geom_vline(xintercept=as.numeric(agene_test$slope_mean_nopc[16]), color="red",
+    geom_vline(xintercept=as.numeric(coefficients(m1_nopc)[2]), color="red",
                linetype="dashed")+
     geom_vline(xintercept=quantile(slope,c(0.025)), color="blue")+
     geom_vline(xintercept=quantile(slope,c(0.975)), color="blue")+
-    labs(x="Slope between adult lifespan and genetic diversity", 
+    labs(x="Slope between Ne/N and genetic diversity", 
          y = "Frequency")+
     labs(tag="A")+
     theme_classic()
@@ -472,16 +479,16 @@ if (time_code==1){
                linetype="dashed")+
     geom_vline(xintercept=quantile(rsquared,c(0.025)), color="blue")+
     geom_vline(xintercept=quantile(rsquared,c(0.975)), color="blue")+
-    labs(x="Pseudo R² between adult lifespan and genetic diversity", 
+    labs(x="Pseudo R² between Ne/N and genetic diversity", 
          y = "Frequency")+  
     theme_classic()+
-    labs(tag="A")
+    labs(tag="B")
   print(p1)
   
   dd=data.frame(x=log(pvalue))
   p2<-ggplot(dd,aes(x=x)) +
     geom_density(fill="grey",alpha=0.15)+
-    geom_vline(xintercept=log(0.000977), color="red",
+    geom_vline(xintercept=log(0.000966), color="red",
                linetype="dashed")+
     geom_vline(xintercept=quantile(dd$x,c(0.025)), color="blue")+
     geom_vline(xintercept=quantile(dd$x,c(0.975)), color="blue")+
@@ -491,7 +498,7 @@ if (time_code==1){
     labs(tag="B")
   print(p2)
   
-  figure<-ggarrange(p1,p2,ncol=1)
+  figure<-ggarrange(p,p1,ncol=1)
   pdf("C:/Users/ordinateur/ownCloud/COGEDIV/ARTICLE/Genetic_diversity_LHT/figures/sensibility_agene_slope.pdf",width=7.5,height=5)
   print(figure)
   dev.off()

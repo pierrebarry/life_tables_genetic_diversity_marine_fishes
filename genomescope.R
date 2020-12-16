@@ -1462,7 +1462,7 @@ p
 dev.off()
 
 # Supp figure ----
-pdf(paste("figures/genomescope_suppmat.pdf",sep=""),width=17.5,height=17.5)
+pdf(paste("figures/genomescope_suppmat.pdf",sep=""),width=12.5,height=12.5)
 ggarrange(p_genome_length_main,
           p_genome_unique,
           p_genome_repeat,

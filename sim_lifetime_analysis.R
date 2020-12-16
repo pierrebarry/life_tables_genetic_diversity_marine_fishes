@@ -417,7 +417,7 @@ p3 <- ggplot(NULL) +
   theme_classic()+
   xlab(expression("Age-specific survival variable ("*italic(c)*")"))+
   ylab(expression("Age-specific fecundity variable ("*italic(f)*")"))+
-  ggtitle("Linear")+
+  ggtitle("")+
   theme(plot.title = element_text(hjust = 0.5))+
   labs(fill="Slope")+
   theme(legend.position="left")
@@ -429,13 +429,16 @@ p3.rsq <- ggplot(NULL) +
   theme_classic()+
   xlab(expression("Age-specific survival variable ("*italic(c)*")"))+
   ylab(expression("Age-specific fecundity variable ("*italic(f)*")"))+
-  ggtitle("Linear")+
+  ggtitle("")+
   theme(plot.title = element_text(hjust = 0.5))+
   labs(fill="R²")+
   theme(legend.position="right")
 
 
 sim_bottom_linear=ggarrange(p3,p3.rsq,ncol=2)
+sim_bottom_linear<-annotate_figure(sim_bottom_linear,
+                top = text_grob("Linear",face = "bold", size = 14)
+)
 
 ## Fec = polynomual ----
 load(file="Data/sim_lifetime/simulation_lifetime_poly_0.01_first.Rdata")
@@ -473,7 +476,7 @@ p3 <- ggplot(NULL) +
   theme_classic()+
   xlab(expression("Age-specific survival variable ("*italic(c)*")"))+
   ylab(expression("Age-specific fecundity variable ("*italic(f)*")"))+
-  ggtitle("Polynomial")+
+  ggtitle("")+
   theme(plot.title = element_text(hjust = 0.5))+
   labs(fill="Slope")+
   theme(legend.position="left")
@@ -485,14 +488,16 @@ p3.rsq <- ggplot(NULL) +
   theme_classic()+
   xlab(expression("Age-specific survival variable ("*italic(c)*")"))+
   ylab(expression("Age-specific fecundity variable ("*italic(f)*")"))+
-  ggtitle("Polynomial")+
+  ggtitle("")+
   theme(plot.title = element_text(hjust = 0.5))+
   labs(fill="R²")+
   theme(legend.position="right")
 
 
 sim_bottom_poly=ggarrange(p3,p3.rsq,ncol=2)
-
+sim_bottom_poly<-annotate_figure(sim_bottom_poly,
+                                   top = text_grob("Polynomial",face = "bold", size = 14)
+)
 
 ## Fec = Power ----
 load(file="Data/sim_lifetime/simulation_lifetime_power_0.01_noscale.Rdata")
@@ -527,7 +532,7 @@ p3 <- ggplot(NULL) +
   theme_classic()+
   xlab(expression("Age-specific survival variable ("*italic(c)*")"))+
   ylab(expression("Age-specific fecundity variable ("*italic(f)*")"))+
-  ggtitle("Power")+
+  ggtitle("")+
   theme(plot.title = element_text(hjust = 0.5))+
   labs(fill="Slope")+
   theme(legend.position="left")
@@ -539,16 +544,20 @@ p3.rsq <- ggplot(NULL) +
   theme_classic()+
   xlab(expression("Age-specific survival variable ("*italic(c)*")"))+
   ylab(expression("Age-specific fecundity variable ("*italic(f)*")"))+
-  ggtitle("Power")+
+  ggtitle("")+
   theme(plot.title = element_text(hjust = 0.5))+
   labs(fill="R²")+
   theme(legend.position="right")
 
 
-sim_bottom_power=ggarrange(p3,p3.rsq,ncol=2)
+p3.rsq
 
+sim_bottom_power=ggarrange(p3,p3.rsq,ncol=2)
+sim_bottom_power<-annotate_figure(sim_bottom_power,
+                                 top = text_grob("Power-law",face = "bold", size = 14)
+)
 ## Fig Suppmat alternative fecundity model ----
-pdf(paste(wd,"/figures/sim_lifetime_suppmat.pdf",sep=""),width=20,height=20)
+pdf(paste(wd,"/figures/sim_lifetime_suppmat.pdf",sep=""),width=15,height=20)
 print(ggarrange(sim_bottom_linear,
                 sim_bottom_poly,
                 sim_bottom_power,

@@ -42,7 +42,7 @@ lfh<-as.data.frame(read_excel("Data/GENETIC_DIVERSITY_DATA.xlsx",sheet='lfh'))
 load(file="Data/div.Rdata")
 lfh$div=as.vector(div)
 lfh$log_fec=log(lfh$Fec)
-setwd("Data/forward_slim_old")
+setwd("Data/forward_slim")
 species=c("Cgale",
           "Cjuli",
           "Dlabr",
@@ -612,20 +612,27 @@ rsquared=c()
 
 if (time_code==1){
   for (i in 1:ncol(combi)){
-    aaa<-betareg(I(lfh[combi[,i],]$div/100)~est_species[combi[,i],]$Output7)
+    aaa<-betareg(I(lfh[combi[,i],]$div/100)~est_species[combi[,i],]$Output8)
     slope=c(slope,coefficients(summary(aaa))$mean[2,1])
     pvalue=c(pvalue,coefficients(summary(aaa))$mean[2,4])
     rsquared=c(rsquared,aaa$pseudo.r.squared)
   }
   
+  sim=8
+  data_plot=data.frame(species=lfh$Species_plot,
+                       y=lfh$div,
+                       x=est_species[,sim+1],
+                       x2=lfh$Parental_Care)
+  m1_nopc <- betareg(I(y/100)~x,data=data_plot[data_plot$x2=="No",],link='logit')
+
   dd=data.frame(x=slope)
   p<-ggplot(dd,aes(x=x)) +
     geom_density(fill="grey",alpha=0.15)+
-    geom_vline(xintercept=as.numeric(forward_test$slope_mean_nopc[7]), color="red",
+    geom_vline(xintercept=as.numeric(coefficients(m1_nopc)[2]), color="red",
                linetype="dashed")+
     geom_vline(xintercept=quantile(slope,c(0.025)), color="blue")+
     geom_vline(xintercept=quantile(slope,c(0.975)), color="blue")+
-    labs(x="Slope between adult lifespan and genetic diversity", 
+    labs(x="Slope between simulated and observed genetic diversity", 
          y = "Frequency")+
     labs(tag="A")+
     theme_classic()
@@ -634,20 +641,20 @@ if (time_code==1){
   dd=data.frame(x=rsquared)
   p1<-ggplot(dd,aes(x=x)) +
     geom_density(fill="grey",alpha=0.15)+
-    geom_vline(xintercept=0.5158, color="red",
+    geom_vline(xintercept=0.4347, color="red",
                linetype="dashed")+
     geom_vline(xintercept=quantile(rsquared,c(0.025)), color="blue")+
     geom_vline(xintercept=quantile(rsquared,c(0.975)), color="blue")+
-    labs(x="Pseudo R² between adult lifespan and genetic diversity", 
+    labs(x="Pseudo R² between simulated and observed genetic diversity", 
          y = "Frequency")+  
     theme_classic()+
-    labs(tag="A")
+    labs(tag="B")
   print(p1)
   
   dd=data.frame(x=pvalue)
   p2<-ggplot(dd,aes(x=x)) +
     geom_density(fill="grey",alpha=0.15)+
-    geom_vline(xintercept=log(0.00597), color="red",
+    geom_vline(xintercept=0.0115, color="red",
                linetype="dashed")+
     geom_vline(xintercept=quantile(dd$x,c(0.025)), color="blue")+
     geom_vline(xintercept=quantile(dd$x,c(0.975)), color="blue")+
@@ -657,7 +664,7 @@ if (time_code==1){
     labs(tag="B")
   print(p2)
   
-  figure<-ggarrange(p1,p2,ncol=1)
+  figure<-ggarrange(p,p1,ncol=1)
   pdf("../../figures/sensibility_slim_slope.pdf",width=7.5,height=5)
   print(figure)
   dev.off()
