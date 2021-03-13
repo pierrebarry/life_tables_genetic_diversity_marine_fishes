@@ -12,6 +12,7 @@ library(ggplot2)
 library("rnaturalearth")
 library(sf)
 library(ggsn)
+library(rgeos)
 
 # Draw map ----
 color_med_atl=data.frame(Location=c("Gulf of Lion","Costa Calida","Algarve","Bay of Biscay"),

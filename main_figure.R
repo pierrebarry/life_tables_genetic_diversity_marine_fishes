@@ -623,6 +623,7 @@ pairwise_agene_nopc<-ggplot(compare_het_stat_nopc,aes(ratio_truehet,ratio_mean))
   ggtitle("Only non brooding species")+
   annotate("text", x = 0.23, y = 2.1, label = "paste(italic(p), \" = 0.000117 \")",parse=T)+
   annotate("text", x = 0.23, y = 1.969, label = "Est. slope = 0.94")
+load(file="Data/forward_slim/est_species.Rdata")
 data_plot=data.frame(species=lfh$Species_plot,
                      y=lfh$div,
                      x=est_species$Output8,
@@ -710,7 +711,7 @@ div_slim<-ggplot(data_plot_whole,
 load(file="Data/forward_slim_old/est_species.Rdata")
 data_plot=data.frame(species=lfh$Species_plot,
                      y=lfh$div,
-                     x=est_species$Output8,
+                     x=est_species$Output16,
                      x2=lfh$Parental_Care)
 m1<-betareg(I(y/100)~x,data=data_plot,link='logit')
 m1_nopc <- betareg(I(y/100)~x,data=data_plot[data_plot$x2=="No",],link='logit')
@@ -865,32 +866,604 @@ corr_plot<-ggarrange(div_agene,div_slim,labels=c("A","B"),common.legend = T, leg
 corr_plot<-annotate_figure(corr_plot,
                            left = text_grob("Observed heterozygosity (%)",rot = 90,vjust=2.5),
 )
-pairwise_plot_agene<-ggarrange(pairwise_agene,
-                               pairwise_agene_nopc,
-                               labels=c("C","D"),
-                               nrow=1)
-pairwise_plot_agene<-annotate_figure(pairwise_plot_agene,
-                                     left = text_grob(expression(paste("Ratio of observed ", N[e]/N)),rot = 90,vjust=2),
-)
-pairwise_plot_slim<-ggarrange(pairwise_slim,
-                              pairwise_slim_nopc,
-                              labels=c("E","F"),
-                              nrow=1)
-pairwise_plot_slim<-annotate_figure(pairwise_plot_slim,
-                                    left = text_grob("Ratio of simulated genetic diversity",rot = 90,vjust=2.5),
-)
-pairwise_plot<-ggarrange(pairwise_plot_agene,
-                         pairwise_plot_slim,
-                         nrow=1)
-pairwise_plot<-annotate_figure(pairwise_plot,
-                               bottom=text_grob("Ratio of observed genetic diversity",vjust=-1),
-)
+#pairwise_plot_agene<-ggarrange(pairwise_agene,
+#                               pairwise_agene_nopc,
+#                               labels=c("C","D"),
+#                               nrow=1)
+#pairwise_plot_agene<-annotate_figure(pairwise_plot_agene,
+#                                     left = text_grob(expression(paste("Ratio of observed ", N[e]/N)),rot = 90,vjust=2),
+#)
+#pairwise_plot_slim<-ggarrange(pairwise_slim,
+#                              pairwise_slim_nopc,
+#                              labels=c("E","F"),
+#                              nrow=1)
+#pairwise_plot_slim<-annotate_figure(pairwise_plot_slim,
+#                                    left = text_grob("Ratio of simulated genetic diversity",rot = 90,vjust=2.5),
+#)
+#pairwise_plot<-ggarrange(pairwise_plot_agene,
+#                         pairwise_plot_slim,
+#                         nrow=1)
+#pairwise_plot<-annotate_figure(pairwise_plot,
+#                               bottom=text_grob("Ratio of observed genetic diversity",vjust=-1),
+#)
+
+data_plot=data.frame(species=lfh$Species_plot,
+                     y=lfh$div,
+                     x=agene_output[[4]]$Output1,
+                     x2=lfh$Parental_Care)
+data_plot=data_plot[data_plot$x2=="No",]
+data_plot$y=data_plot$y/(max(data_plot$y))
+data_plot$x=data_plot$x/(max(data_plot$x))
+
+summary(lm(y~x,data=data_plot[data_plot$x2=="No",]))
+
+m1<-betareg(I(y/100)~x,data=data_plot,link='logit')
+m1_nopc <- betareg(I(y/100)~x,data=data_plot[data_plot$x2=="No",],link='logit')
+m1_pc <- betareg(I(y/100)~x,data=data_plot[data_plot$x2=="Yes",],link='logit')
+
+data_plot$mean=fitted(m1)
+data_plot$sd_025=fitted(m1)*100-2*coefficients(summary(m1))$mean[2,2]
+data_plot$sd_975=fitted(m1)*100+2*coefficients(summary(m1))$mean[2,2]
+
+data_plot_tmp=data.frame(species=lfh$Species_plot,
+                         y=lfh$div,
+                         x=agene_output[[4]]$Output16,
+                         x2=lfh$Parental_Care)
+data_plot_tmp=data_plot_tmp[data_plot_tmp$x2=="No",]
+data_plot_tmp$y=data_plot_tmp$y/(max(data_plot_tmp$y))
+data_plot_tmp$x=data_plot_tmp$x/(max(data_plot_tmp$x))
+
+summary(lm(y~x,data=data_plot_tmp[data_plot_tmp$x2=="No",]))
+
+m1<-betareg(I(y/100)~x,data=data_plot_tmp,link='logit')
+
+data_plot_tmp$mean=fitted(m1)
+data_plot_tmp$sd_025=fitted(m1)*100-2*coefficients(summary(m1))$mean[2,2]
+data_plot_tmp$sd_975=fitted(m1)*100+2*coefficients(summary(m1))$mean[2,2]
+
+italic_species=c("italic('C. galerita')",
+                 "italic('C. julis')",
+                 "italic('D. labrax')",
+                 "italic('D. puntazzo')",
+                 "italic('H. guttulatus')",
+                 "italic('L. budegassa')",
+                 "italic('L. mormyrus')",
+                 "italic('M. merluccius')",
+                 "italic('M. surmuletus')",
+                 "italic('P. erythrinus')",
+                 "italic('S. cabrilla')",
+                 "italic('S. cantharus')",
+                 "italic('S. cinereus')",
+                 "italic('S. pilchardus')",
+                 "italic('S. sarda')",
+                 "italic('S. typhle')")
+
+col=viridis(100)
+
+data_plot_whole=rbind(data_plot,data_plot_tmp)
+data_plot_whole$gg=c(rep(1,11),rep(2,11))
+data_plot_whole$gg=factor(data_plot_whole$gg)
+
+#data_plot_whole=data_plot_whole[data_plot_whole$x2=="No" & data_plot_whole$gg=="1",]
+
+#tt_tmp=data.frame(species=lfh$Species_plot,
+#                     y=lfh$div,
+#☻                     x=agene_output[[4]]$Output16,
+#                     x2=lfh$Parental_Care)
+#tt_tmp$y=tt_tmp$y/(max(tt_tmp$y))
+#tt_tmp$x=tt_tmp$x/(max(tt_tmp$x))
+#tt_tmp=tt_tmp[tt_tmp$x2=="No",]
+#tt_tmp=cbind(tt_tmp,data_plot_whole[,c(5:8)])
+#tt_tmp$gg=rep(2,nrow(tt_tmp))
+
+#data_plot_whole=rbind(data_plot_whole,tt_tmp)
+
+agene_p1<-ggplot(data_plot_whole, 
+                  aes(x = x, 
+                      y = mean*100,
+                      label=species,
+                      group=gg
+                      #group=x2)
+                  )) +
+  geom_line(aes(alpha=gg,
+    colour=gg),
+            size=2)+
+  #geom_ribbon(aes(ymin=sd_025,
+  #                ymax=sd_975,colour=gg),
+  #            alpha=0.05,
+  #            size=0.05) +
+  geom_point(data=data_plot_whole,size=2.5,
+             aes(x=x,
+                 y=y,
+                 alpha=gg,
+                 color=gg),
+             shape=19)+
+  geom_rangeframe()+
+  theme_classic()+
+  #geom_text_repel(data=data_plot,aes(x=x,y=y),label=italic_species,col="black",parse=T)+
+  #scale_x_continuous(breaks=seq(0,1,by=0.1),
+  #                   labels=as.character(seq(0,1,by=0.1)))+
+  #scale_y_continuous(breaks=seq(0,1,by=0.1),
+  #                   labels=as.character(seq(0,1,by=0.1)))+
+  xlab("")+
+  ylab("")+
+  ggtitle("--")+
+  xlim(c(0,1))+
+  ylim(c(0,1))+
+  scale_color_manual(name = "Simulation",values=c(viridis(100)[c(47.5,72.5,97.5)][2],"grey"),labels=c("Focal model","Complete model"))+
+  scale_alpha_manual(name="Simulation",values=c(1,0.5),labels=c("Focal model","Complete model"))+
+  theme(legend.position = "bottom",
+        plot.title = element_text(hjust = 0.5))+
+  geom_abline(intercept=0,slope=1,col="red",lty=2)
+  #annotate("text", x = 0.2025, y = 1.325, label = "paste(italic(p), \" = 0.000966 \")",parse=T)+
+  #annotate("text", x = 0.2025, y = 1.265, label = "paste(italic(R) ^ 2, \" = 0.55 \")",parse=T)
+
+data_plot=data.frame(species=lfh$Species_plot,
+                     y=lfh$div,
+                     x=agene_output[[4]]$Output2,
+                     x2=lfh$Parental_Care)
+data_plot=data_plot[data_plot$x2=="No",]
+data_plot$y=data_plot$y/(max(data_plot$y))
+data_plot$x=data_plot$x/(max(data_plot$x))
+
+summary(lm(y~x,data=data_plot[data_plot$x2=="No",]))
+
+m1<-betareg(I(y/100)~x,data=data_plot,link='logit')
+m1_nopc <- betareg(I(y/100)~x,data=data_plot[data_plot$x2=="No",],link='logit')
+m1_pc <- betareg(I(y/100)~x,data=data_plot[data_plot$x2=="Yes",],link='logit')
+
+data_plot$mean=fitted(m1)
+data_plot$sd_025=fitted(m1)*100-2*coefficients(summary(m1))$mean[2,2]
+data_plot$sd_975=fitted(m1)*100+2*coefficients(summary(m1))$mean[2,2]
+
+data_plot_tmp=data.frame(species=lfh$Species_plot,
+                         y=lfh$div,
+                         x=agene_output[[4]]$Output16,
+                         x2=lfh$Parental_Care)
+data_plot_tmp=data_plot_tmp[data_plot_tmp$x2=="No",]
+data_plot_tmp$y=data_plot_tmp$y/(max(data_plot_tmp$y))
+data_plot_tmp$x=data_plot_tmp$x/(max(data_plot_tmp$x))
+
+summary(lm(y~x,data=data_plot_tmp[data_plot_tmp$x2=="No",]))
+
+m1<-betareg(I(y/100)~x,data=data_plot_tmp,link='logit')
+
+data_plot_tmp$mean=fitted(m1)
+data_plot_tmp$sd_025=fitted(m1)*100-2*coefficients(summary(m1))$mean[2,2]
+data_plot_tmp$sd_975=fitted(m1)*100+2*coefficients(summary(m1))$mean[2,2]
+
+italic_species=c("italic('C. galerita')",
+                 "italic('C. julis')",
+                 "italic('D. labrax')",
+                 "italic('D. puntazzo')",
+                 "italic('H. guttulatus')",
+                 "italic('L. budegassa')",
+                 "italic('L. mormyrus')",
+                 "italic('M. merluccius')",
+                 "italic('M. surmuletus')",
+                 "italic('P. erythrinus')",
+                 "italic('S. cabrilla')",
+                 "italic('S. cantharus')",
+                 "italic('S. cinereus')",
+                 "italic('S. pilchardus')",
+                 "italic('S. sarda')",
+                 "italic('S. typhle')")
+
+col=viridis(100)
+
+data_plot_whole=rbind(data_plot,data_plot_tmp)
+data_plot_whole$gg=c(rep(1,11),rep(2,11))
+data_plot_whole$gg=factor(data_plot_whole$gg)
+
+#data_plot_whole=data_plot_whole[data_plot_whole$x2=="No" & data_plot_whole$gg=="1",]
+
+#tt_tmp=data.frame(species=lfh$Species_plot,
+#                     y=lfh$div,
+#☻                     x=agene_output[[4]]$Output16,
+#                     x2=lfh$Parental_Care)
+#tt_tmp$y=tt_tmp$y/(max(tt_tmp$y))
+#tt_tmp$x=tt_tmp$x/(max(tt_tmp$x))
+#tt_tmp=tt_tmp[tt_tmp$x2=="No",]
+#tt_tmp=cbind(tt_tmp,data_plot_whole[,c(5:8)])
+#tt_tmp$gg=rep(2,nrow(tt_tmp))
+
+#data_plot_whole=rbind(data_plot_whole,tt_tmp)
+
+agene_p2<-ggplot(data_plot_whole, 
+                 aes(x = x, 
+                     y = mean*100,
+                     label=species,
+                     group=gg
+                     #group=x2)
+                 )) +
+  geom_line(aes(alpha=gg,
+                colour=gg),
+            size=2)+
+  #geom_ribbon(aes(ymin=sd_025,
+  #                ymax=sd_975,colour=gg),
+  #            alpha=0.05,
+  #            size=0.05) +
+  geom_point(data=data_plot_whole,size=2.5,
+             aes(x=x,
+                 y=y,
+                 alpha=gg,
+                 color=gg),
+             shape=19)+
+  geom_rangeframe()+
+  theme_classic()+
+  #geom_text_repel(data=data_plot,aes(x=x,y=y),label=italic_species,col="black",parse=T)+
+  #scale_x_continuous(breaks=seq(0,1,by=0.1),
+  #                   labels=as.character(seq(0,1,by=0.1)))+
+  #scale_y_continuous(breaks=seq(0,1,by=0.1),
+  #                   labels=as.character(seq(0,1,by=0.1)))+
+  xlab("")+
+  ylab("")+
+  ggtitle("Age at maturity")+
+  xlim(c(0,1))+
+  ylim(c(0,1))+
+  scale_color_manual(name = "Simulation",values=c(viridis(100)[c(47.5,72.5,97.5)][2],"grey"),labels=c("Focal model","Complete model"))+
+  scale_alpha_manual(name="Simulation",values=c(1,0.5),labels=c("Focal model","Complete model"))+
+  theme(legend.position = "bottom",
+        plot.title = element_text(hjust = 0.5))+
+  geom_abline(intercept=0,slope=1,col="red",lty=2)
+#annotate("text", x = 0.2025, y = 1.325, label = "paste(italic(p), \" = 0.000966 \")",parse=T)+
+#annotate("text", x = 0.2025, y = 1.265, label = "paste(italic(R) ^ 2, \" = 0.55 \")",parse=T)
+
+data_plot=data.frame(species=lfh$Species_plot,
+                     y=lfh$div,
+                     x=agene_output[[4]]$Output3,
+                     x2=lfh$Parental_Care)
+data_plot=data_plot[data_plot$x2=="No",]
+data_plot$y=data_plot$y/(max(data_plot$y))
+data_plot$x=data_plot$x/(max(data_plot$x))
+
+summary(lm(y~x,data=data_plot[data_plot$x2=="No",]))
+
+m1<-betareg(I(y/100)~x,data=data_plot,link='logit')
+m1_nopc <- betareg(I(y/100)~x,data=data_plot[data_plot$x2=="No",],link='logit')
+m1_pc <- betareg(I(y/100)~x,data=data_plot[data_plot$x2=="Yes",],link='logit')
+
+data_plot$mean=fitted(m1)
+data_plot$sd_025=fitted(m1)*100-2*coefficients(summary(m1))$mean[2,2]
+data_plot$sd_975=fitted(m1)*100+2*coefficients(summary(m1))$mean[2,2]
+
+data_plot_tmp=data.frame(species=lfh$Species_plot,
+                         y=lfh$div,
+                         x=agene_output[[4]]$Output16,
+                         x2=lfh$Parental_Care)
+data_plot_tmp=data_plot_tmp[data_plot_tmp$x2=="No",]
+data_plot_tmp$y=data_plot_tmp$y/(max(data_plot_tmp$y))
+data_plot_tmp$x=data_plot_tmp$x/(max(data_plot_tmp$x))
+
+summary(lm(y~x,data=data_plot_tmp[data_plot_tmp$x2=="No",]))
+
+m1<-betareg(I(y/100)~x,data=data_plot_tmp,link='logit')
+
+data_plot_tmp$mean=fitted(m1)
+data_plot_tmp$sd_025=fitted(m1)*100-2*coefficients(summary(m1))$mean[2,2]
+data_plot_tmp$sd_975=fitted(m1)*100+2*coefficients(summary(m1))$mean[2,2]
+
+italic_species=c("italic('C. galerita')",
+                 "italic('C. julis')",
+                 "italic('D. labrax')",
+                 "italic('D. puntazzo')",
+                 "italic('H. guttulatus')",
+                 "italic('L. budegassa')",
+                 "italic('L. mormyrus')",
+                 "italic('M. merluccius')",
+                 "italic('M. surmuletus')",
+                 "italic('P. erythrinus')",
+                 "italic('S. cabrilla')",
+                 "italic('S. cantharus')",
+                 "italic('S. cinereus')",
+                 "italic('S. pilchardus')",
+                 "italic('S. sarda')",
+                 "italic('S. typhle')")
+
+col=viridis(100)
+
+data_plot_whole=rbind(data_plot,data_plot_tmp)
+data_plot_whole$gg=c(rep(1,11),rep(2,11))
+data_plot_whole$gg=factor(data_plot_whole$gg)
+
+#data_plot_whole=data_plot_whole[data_plot_whole$x2=="No" & data_plot_whole$gg=="1",]
+
+#tt_tmp=data.frame(species=lfh$Species_plot,
+#                     y=lfh$div,
+#☻                     x=agene_output[[4]]$Output16,
+#                     x2=lfh$Parental_Care)
+#tt_tmp$y=tt_tmp$y/(max(tt_tmp$y))
+#tt_tmp$x=tt_tmp$x/(max(tt_tmp$x))
+#tt_tmp=tt_tmp[tt_tmp$x2=="No",]
+#tt_tmp=cbind(tt_tmp,data_plot_whole[,c(5:8)])
+#tt_tmp$gg=rep(2,nrow(tt_tmp))
+
+#data_plot_whole=rbind(data_plot_whole,tt_tmp)
+
+agene_p3<-ggplot(data_plot_whole, 
+                 aes(x = x, 
+                     y = mean*100,
+                     label=species,
+                     group=gg
+                     #group=x2)
+                 )) +
+  geom_line(aes(alpha=gg,
+                colour=gg),
+            size=2)+
+  #geom_ribbon(aes(ymin=sd_025,
+  #                ymax=sd_975,colour=gg),
+  #            alpha=0.05,
+  #            size=0.05) +
+  geom_point(data=data_plot_whole,size=2.5,
+             aes(x=x,
+                 y=y,
+                 alpha=gg,
+                 color=gg),
+             shape=19)+
+  geom_rangeframe()+
+  theme_classic()+
+  #geom_text_repel(data=data_plot,aes(x=x,y=y),label=italic_species,col="black",parse=T)+
+  #scale_x_continuous(breaks=seq(0,1,by=0.1),
+  #                   labels=as.character(seq(0,1,by=0.1)))+
+  #scale_y_continuous(breaks=seq(0,1,by=0.1),
+  #                   labels=as.character(seq(0,1,by=0.1)))+
+  xlab("")+
+  ylab("")+
+  ggtitle("Survival")+
+  xlim(c(0,1))+
+  ylim(c(0,1))+
+  scale_color_manual(name = "Simulation",values=c(viridis(100)[c(47.5,72.5,97.5)][2],"grey"),labels=c("Focal model","Complete model"))+
+  scale_alpha_manual(name="Simulation",values=c(1,0.5),labels=c("Focal model","Complete model"))+
+  theme(legend.position = "bottom",
+        plot.title = element_text(hjust = 0.5))+
+  geom_abline(intercept=0,slope=1,col="red",lty=2)
+#annotate("text", x = 0.2025, y = 1.325, label = "paste(italic(p), \" = 0.000966 \")",parse=T)+
+#annotate("text", x = 0.2025, y = 1.265, label = "paste(italic(R) ^ 2, \" = 0.55 \")",parse=T)
+
+data_plot=data.frame(species=lfh$Species_plot,
+                     y=lfh$div,
+                     x=agene_output[[4]]$Output4,
+                     x2=lfh$Parental_Care)
+data_plot=data_plot[data_plot$x2=="No",]
+data_plot$y=data_plot$y/(max(data_plot$y))
+data_plot$x=data_plot$x/(max(data_plot$x))
+
+summary(lm(y~x,data=data_plot[data_plot$x2=="No",]))
+
+m1<-betareg(I(y/100)~x,data=data_plot,link='logit')
+m1_nopc <- betareg(I(y/100)~x,data=data_plot[data_plot$x2=="No",],link='logit')
+m1_pc <- betareg(I(y/100)~x,data=data_plot[data_plot$x2=="Yes",],link='logit')
+
+data_plot$mean=fitted(m1)
+data_plot$sd_025=fitted(m1)*100-2*coefficients(summary(m1))$mean[2,2]
+data_plot$sd_975=fitted(m1)*100+2*coefficients(summary(m1))$mean[2,2]
+
+data_plot_tmp=data.frame(species=lfh$Species_plot,
+                         y=lfh$div,
+                         x=agene_output[[4]]$Output16,
+                         x2=lfh$Parental_Care)
+data_plot_tmp=data_plot_tmp[data_plot_tmp$x2=="No",]
+data_plot_tmp$y=data_plot_tmp$y/(max(data_plot_tmp$y))
+data_plot_tmp$x=data_plot_tmp$x/(max(data_plot_tmp$x))
+
+summary(lm(y~x,data=data_plot_tmp[data_plot_tmp$x2=="No",]))
+
+m1<-betareg(I(y/100)~x,data=data_plot_tmp,link='logit')
+
+data_plot_tmp$mean=fitted(m1)
+data_plot_tmp$sd_025=fitted(m1)*100-2*coefficients(summary(m1))$mean[2,2]
+data_plot_tmp$sd_975=fitted(m1)*100+2*coefficients(summary(m1))$mean[2,2]
+
+italic_species=c("italic('C. galerita')",
+                 "italic('C. julis')",
+                 "italic('D. labrax')",
+                 "italic('D. puntazzo')",
+                 "italic('H. guttulatus')",
+                 "italic('L. budegassa')",
+                 "italic('L. mormyrus')",
+                 "italic('M. merluccius')",
+                 "italic('M. surmuletus')",
+                 "italic('P. erythrinus')",
+                 "italic('S. cabrilla')",
+                 "italic('S. cantharus')",
+                 "italic('S. cinereus')",
+                 "italic('S. pilchardus')",
+                 "italic('S. sarda')",
+                 "italic('S. typhle')")
+
+col=viridis(100)
+
+data_plot_whole=rbind(data_plot,data_plot_tmp)
+data_plot_whole$gg=c(rep(1,11),rep(2,11))
+data_plot_whole$gg=factor(data_plot_whole$gg)
+
+#data_plot_whole=data_plot_whole[data_plot_whole$x2=="No" & data_plot_whole$gg=="1",]
+
+#tt_tmp=data.frame(species=lfh$Species_plot,
+#                     y=lfh$div,
+#☻                     x=agene_output[[4]]$Output16,
+#                     x2=lfh$Parental_Care)
+#tt_tmp$y=tt_tmp$y/(max(tt_tmp$y))
+#tt_tmp$x=tt_tmp$x/(max(tt_tmp$x))
+#tt_tmp=tt_tmp[tt_tmp$x2=="No",]
+#tt_tmp=cbind(tt_tmp,data_plot_whole[,c(5:8)])
+#tt_tmp$gg=rep(2,nrow(tt_tmp))
+
+#data_plot_whole=rbind(data_plot_whole,tt_tmp)
+
+agene_p4<-ggplot(data_plot_whole, 
+                 aes(x = x, 
+                     y = mean*100,
+                     label=species,
+                     group=gg
+                     #group=x2)
+                 )) +
+  geom_line(aes(alpha=gg,
+                colour=gg),
+            size=2)+
+  #geom_ribbon(aes(ymin=sd_025,
+  #                ymax=sd_975,colour=gg),
+  #            alpha=0.05,
+  #            size=0.05) +
+  geom_point(data=data_plot_whole,size=2.5,
+             aes(x=x,
+                 y=y,
+                 alpha=gg,
+                 color=gg),
+             shape=19)+
+  geom_rangeframe()+
+  theme_classic()+
+  #geom_text_repel(data=data_plot,aes(x=x,y=y),label=italic_species,col="black",parse=T)+
+  #scale_x_continuous(breaks=seq(0,1,by=0.1),
+  #                   labels=as.character(seq(0,1,by=0.1)))+
+  #scale_y_continuous(breaks=seq(0,1,by=0.1),
+  #                   labels=as.character(seq(0,1,by=0.1)))+
+  xlab("")+
+  ylab("")+
+  ggtitle("Age at Maturity + Survival")+
+  xlim(c(0,1))+
+  ylim(c(0,1))+
+  scale_color_manual(name = "Simulation",values=c(viridis(100)[c(47.5,72.5,97.5)][2],"grey"),labels=c("Focal model","Complete model"))+
+  scale_alpha_manual(name="Simulation",values=c(1,0.5),labels=c("Focal model","Complete model"))+
+  theme(legend.position = "bottom",
+        plot.title = element_text(hjust = 0.5))+
+  geom_abline(intercept=0,slope=1,col="red",lty=2)
+#annotate("text", x = 0.2025, y = 1.325, label = "paste(italic(p), \" = 0.000966 \")",parse=T)+
+#annotate("text", x = 0.2025, y = 1.265, label = "paste(italic(R) ^ 2, \" = 0.55 \")",parse=T)
+
+
+data_plot=data.frame(species=lfh$Species_plot,
+                     y=lfh$div,
+                     x=agene_output[[4]]$Output5,
+                     x2=lfh$Parental_Care)
+data_plot=data_plot[data_plot$x2=="No",]
+data_plot$y=data_plot$y/(max(data_plot$y))
+data_plot$x=data_plot$x/(max(data_plot$x))
+
+summary(lm(y~x,data=data_plot[data_plot$x2=="No",]))
+
+m1<-betareg(I(y/100)~x,data=data_plot,link='logit')
+m1_nopc <- betareg(I(y/100)~x,data=data_plot[data_plot$x2=="No",],link='logit')
+m1_pc <- betareg(I(y/100)~x,data=data_plot[data_plot$x2=="Yes",],link='logit')
+
+data_plot$mean=fitted(m1)
+data_plot$sd_025=fitted(m1)*100-2*coefficients(summary(m1))$mean[2,2]
+data_plot$sd_975=fitted(m1)*100+2*coefficients(summary(m1))$mean[2,2]
+
+data_plot_tmp=data.frame(species=lfh$Species_plot,
+                         y=lfh$div,
+                         x=agene_output[[4]]$Output16,
+                         x2=lfh$Parental_Care)
+data_plot_tmp=data_plot_tmp[data_plot_tmp$x2=="No",]
+data_plot_tmp$y=data_plot_tmp$y/(max(data_plot_tmp$y))
+data_plot_tmp$x=data_plot_tmp$x/(max(data_plot_tmp$x))
+
+summary(lm(y~x,data=data_plot_tmp[data_plot_tmp$x2=="No",]))
+
+m1<-betareg(I(y/100)~x,data=data_plot_tmp,link='logit')
+
+data_plot_tmp$mean=fitted(m1)
+data_plot_tmp$sd_025=fitted(m1)*100-2*coefficients(summary(m1))$mean[2,2]
+data_plot_tmp$sd_975=fitted(m1)*100+2*coefficients(summary(m1))$mean[2,2]
+
+italic_species=c("italic('C. galerita')",
+                 "italic('C. julis')",
+                 "italic('D. labrax')",
+                 "italic('D. puntazzo')",
+                 "italic('H. guttulatus')",
+                 "italic('L. budegassa')",
+                 "italic('L. mormyrus')",
+                 "italic('M. merluccius')",
+                 "italic('M. surmuletus')",
+                 "italic('P. erythrinus')",
+                 "italic('S. cabrilla')",
+                 "italic('S. cantharus')",
+                 "italic('S. cinereus')",
+                 "italic('S. pilchardus')",
+                 "italic('S. sarda')",
+                 "italic('S. typhle')")
+
+col=viridis(100)
+
+data_plot_whole=rbind(data_plot,data_plot_tmp)
+data_plot_whole$gg=c(rep(1,11),rep(2,11))
+data_plot_whole$gg=factor(data_plot_whole$gg)
+
+#data_plot_whole=data_plot_whole[data_plot_whole$x2=="No" & data_plot_whole$gg=="1",]
+
+#tt_tmp=data.frame(species=lfh$Species_plot,
+#                     y=lfh$div,
+#☻                     x=agene_output[[4]]$Output16,
+#                     x2=lfh$Parental_Care)
+#tt_tmp$y=tt_tmp$y/(max(tt_tmp$y))
+#tt_tmp$x=tt_tmp$x/(max(tt_tmp$x))
+#tt_tmp=tt_tmp[tt_tmp$x2=="No",]
+#tt_tmp=cbind(tt_tmp,data_plot_whole[,c(5:8)])
+#tt_tmp$gg=rep(2,nrow(tt_tmp))
+
+#data_plot_whole=rbind(data_plot_whole,tt_tmp)
+
+agene_p5<-ggplot(data_plot_whole, 
+                 aes(x = x, 
+                     y = mean*100,
+                     label=species,
+                     group=gg
+                     #group=x2)
+                 )) +
+  geom_line(aes(alpha=gg,
+                colour=gg),
+            size=2)+
+  #geom_ribbon(aes(ymin=sd_025,
+  #                ymax=sd_975,colour=gg),
+  #            alpha=0.05,
+  #            size=0.05) +
+  geom_point(data=data_plot_whole,size=2.5,
+             aes(x=x,
+                 y=y,
+                 alpha=gg,
+                 color=gg),
+             shape=19)+
+  geom_rangeframe()+
+  theme_classic()+
+  #geom_text_repel(data=data_plot,aes(x=x,y=y),label=italic_species,col="black",parse=T)+
+  #scale_x_continuous(breaks=seq(0,1,by=0.1),
+  #                   labels=as.character(seq(0,1,by=0.1)))+
+  #scale_y_continuous(breaks=seq(0,1,by=0.1),
+  #                   labels=as.character(seq(0,1,by=0.1)))+
+  xlab("")+
+  ylab("")+
+  ggtitle("Fecundity")+
+  xlim(c(0,1))+
+  ylim(c(0,1))+
+  scale_color_manual(name = "Simulation",values=c(viridis(100)[c(47.5,72.5,97.5)][2],"grey"),labels=c("Focal model","Complete model"))+
+  scale_alpha_manual(name="Simulation",values=c(1,0.5),labels=c("Focal model","Complete model"))+
+  theme(legend.position = "bottom",
+        plot.title = element_text(hjust = 0.5))+
+  geom_abline(intercept=0,slope=1,col="red",lty=2)
+#annotate("text", x = 0.2025, y = 1.325, label = "paste(italic(p), \" = 0.000966 \")",parse=T)+
+#annotate("text", x = 0.2025, y = 1.265, label = "paste(italic(R) ^ 2, \" = 0.55 \")",parse=T)
+
+agene_unique_plot<-ggarrange(agene_p1,
+                               agene_p2,
+                               agene_p3,
+                               agene_p4,
+                               agene_p5,
+labels=c("C","D","E","F","G"),
+nrow=1,
+common.legend = T)
+
+agene_unique_plot<-annotate_figure(agene_unique_plot,
+left = text_grob("Scaled genetic diversity",rot = 90,vjust=1),
+bottom = text_grob(paste("Scaled",expression(Ne/N),sep=" "),vjust=-0.5))
+                 
+
 all_plot<-ggarrange(
   corr_plot,
-  pairwise_plot,
+agene_unique_plot,
   nrow=2)
 
-pdf(paste(wd,"/figures/vk_plot.pdf",sep=""),width=12,height=7.5)
+#width=12,height=7.5
+pdf(paste(wd,"/figures/vk_plot.pdf",sep=""),width=15,height=9.375)
 print(all_plot)
 dev.off()
 

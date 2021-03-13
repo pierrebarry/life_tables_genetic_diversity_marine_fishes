@@ -207,6 +207,14 @@ for (sim in 1:16){
     
   })
   
+  data_plot=data.frame(species=lfh$Species_plot,
+                       y=lfh$div,
+                       x=agene_output[[4]][,sim+3],
+                       x2=lfh$Parental_Care)
+  data_plot$y=data_plot$y/(max(data_plot$y))
+  data_plot$x=data_plot$x/(max(data_plot$x))
+  
+  
   compare_het=data.frame(SP1=c(NA),
                          SP2=c(NA),
                          ratio_mean=c(NA),

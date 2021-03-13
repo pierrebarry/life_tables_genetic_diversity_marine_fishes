@@ -26,6 +26,109 @@ load(file="Data/div.Rdata")
 lfh$div=as.vector(div)
 lfh$log_fec=log(lfh$Fec)
 
+p1<-ggplot(lfh,aes(x=Species_code,y=Body_Size,label=Body_Size,color=Body_Size))+
+  geom_segment( aes(x=Species_code, xend=Species_code, y=0, yend=Body_Size), color="grey") +
+  geom_point(size=4) +
+  theme_classic()+
+  ylab("Body size (cm)")+
+  xlab("") +
+  coord_flip() +
+  geom_text(nudge_y = 10) +
+  scale_color_gradient(low = "blue", high = "red")+
+  theme(legend.position = "none")+
+  theme(
+        axis.text.y = element_blank())
+
+p2<-ggplot(lfh,aes(x=Species_code,y=Lifespan,label=Lifespan,color=Lifespan))+
+  geom_segment( aes(x=Species_code, xend=Species_code, y=0, yend=Lifespan), color="grey") +
+  geom_point(size=4) +
+  theme_classic()+
+  ylab("Lifespan (years)")+
+  coord_flip() +
+  xlab("") +
+  geom_text(nudge_y = 1) +
+  scale_color_gradient(low = "blue", high = "red")+
+  theme(legend.position = "none")+
+  theme(
+    axis.text.y = element_blank())
+
+p3<-ggplot(lfh,aes(x=Species_code,y=Propagule_Size,label=Propagule_Size,color=Propagule_Size))+
+  geom_segment( aes(x=Species_code, xend=Species_code, y=0, yend=Propagule_Size), color="grey") +
+  geom_point(size=4) +
+  theme_classic()+
+  ylab("Propagule size (mm)")+
+  coord_flip() +
+  xlab("") +
+  geom_text(nudge_y =2) +
+  scale_color_gradient(low = "blue", high = "red")+
+  theme(legend.position = "none")+
+  theme(
+    axis.text.y = element_blank())
+
+df <- data.frame()
+fake_plot<-ggplot(df) + geom_point() + xlim(0,1) + ylim(1,17)
+for (j in 1:length(levels(factor(lfh$Species_code)))){
+  
+  img<-readPNG(paste("Data/",levels(factor(lfh$Species_code))[j],".png",sep=""))
+  g <- rasterGrob(img, interpolate=TRUE)
+  
+  fake_plot<-fake_plot+  
+    annotation_custom(g, 
+                      xmin=0, 
+                      xmax=1, 
+                      ymin=j,
+                      ymax=j+1)
+  
+}
+
+fake_plot<-fake_plot+
+  theme_void()+
+  ylim(0.25,16.4)
+
+p4<-ggplot(data=lfh)+
+  theme_void()+
+  ylim(0.25,16.4)+
+  xlim(c(0,3))+
+  geom_rect(xmin=0.25, xmax=0.75, ymin=0.25, ymax=0.75,color="black",fill="white")+
+  geom_rect(xmin=0.25, xmax=0.75, ymin=1.25, ymax=1.75,color="black",fill="green",alpha=0.5)+
+  geom_rect(xmin=0.25, xmax=0.75, ymin=2.25, ymax=2.75,color="black",fill="white")+
+  geom_rect(xmin=0.25, xmax=0.75, ymin=3.25, ymax=3.75,color="black",fill="green",alpha=0.5)+
+  geom_rect(xmin=0.25, xmax=0.75, ymin=4.25, ymax=4.75,color="black",fill="white")+
+  geom_rect(xmin=0.25, xmax=0.75, ymin=5.25, ymax=5.75,color="black",fill="white")+
+  geom_rect(xmin=0.25, xmax=0.75, ymin=6.25, ymax=6.75,color="black",fill="green",alpha=0.5)+
+  geom_rect(xmin=0.25, xmax=0.75, ymin=7.25, ymax=7.75,color="black",fill="white")+
+  geom_rect(xmin=0.25, xmax=0.75, ymin=8.25, ymax=8.75,color="black",fill="white")+
+  geom_rect(xmin=0.25, xmax=0.75, ymin=9.25, ymax=9.75,color="black",fill="green",alpha=0.5)+
+  geom_rect(xmin=0.25, xmax=0.75, ymin=10.25, ymax=10.75,color="black",fill="green",alpha=0.5)+
+  geom_rect(xmin=0.25, xmax=0.75, ymin=11.25, ymax=11.75,color="black",fill="green",alpha=0.5)+
+  geom_rect(xmin=0.25, xmax=0.75, ymin=12.25, ymax=12.75,color="black",fill="white")+
+  geom_rect(xmin=0.25, xmax=0.75, ymin=13.25, ymax=13.75,color="black",fill="white")+
+  geom_rect(xmin=0.25, xmax=0.75, ymin=14.25, ymax=14.75,color="black",fill="white")+
+  geom_rect(xmin=0.25, xmax=0.75, ymin=15.25, ymax=15.75,color="black",fill="white")+
+  geom_rect(xmin=2.25, xmax=2.75, ymin=0.25, ymax=0.75,color="black",fill="green",alpha=.5)+
+  geom_rect(xmin=2.25, xmax=2.75, ymin=1.25, ymax=1.75,color="black",fill="white")+
+  geom_rect(xmin=2.25, xmax=2.75, ymin=2.25, ymax=2.75,color="black",fill="white")+
+  geom_rect(xmin=2.25, xmax=2.75, ymin=3.25, ymax=3.75,color="black",fill="white")+
+  geom_rect(xmin=2.25, xmax=2.75, ymin=4.25, ymax=4.75,color="black",fill="green",alpha=0.5)+
+  geom_rect(xmin=2.25, xmax=2.75, ymin=5.25, ymax=5.75,color="black",fill="white")+
+  geom_rect(xmin=2.25, xmax=2.75, ymin=6.25, ymax=6.75,color="black",fill="white")+
+  geom_rect(xmin=2.25, xmax=2.75, ymin=7.25, ymax=7.75,color="black",fill="white")+
+  geom_rect(xmin=2.25, xmax=2.75, ymin=8.25, ymax=8.75,color="black",fill="white")+
+  geom_rect(xmin=2.25, xmax=2.75, ymin=9.25, ymax=9.75,color="black",fill="white")+
+  geom_rect(xmin=2.25, xmax=2.75, ymin=10.25, ymax=10.75,color="black",fill="white")+
+  geom_rect(xmin=2.25, xmax=2.75, ymin=11.25, ymax=11.75,color="black",fill="green",alpha=0.5)+
+  geom_rect(xmin=2.25, xmax=2.75, ymin=12.25, ymax=12.75,color="black",fill="green",alpha=0.5)+
+  geom_rect(xmin=2.25, xmax=2.75, ymin=13.25, ymax=13.75,color="black",fill="white")+
+  geom_rect(xmin=2.25, xmax=2.75, ymin=14.25, ymax=14.75,color="black",fill="white")+
+  geom_rect(xmin=2.25, xmax=2.75, ymin=15.25, ymax=15.75,color="black",fill="green",alpha=0.5)+
+  annotate("text", x = 0.5, y = 16.25, label = "Hermaphroditism")+
+  annotate("text", x = 2.5, y = 16.25, label = "Parental care")
+
+fake_plot<-ggarrange(p4,fake_plot,ncol=2,widths = c(0.5,0.5),heights = c(1,0.9))
+
+main_sp<-ggarrange(fake_plot,ggarrange(p1,p2,p3,ncol=3),ncol=2,widths = c(0.1,0.9),heights = c(0.9,1))
+
+
 # Correlation between life history traits and genetic diversity ----
 
 infer_lfh=data.frame(Predictor=c(NA),
