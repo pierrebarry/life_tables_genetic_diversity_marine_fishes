@@ -2,7 +2,7 @@
 
 Scripts and files to generate results and output of the article 
 
-> Barry P., Broquet T., Gagnaire P.-A., 2021. Life tables drive genetic diversity in marine fishes. Evolution Letters
+> Barry P., Broquet T., Gagnaire P.-A., 2021. Life tables drive genetic diversity in marine fishes. 
 
 ## Sampling information
 
