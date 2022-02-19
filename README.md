@@ -2,7 +2,7 @@
 
 Scripts and files to generate results and output of the article 
 
-> Barry P., Broquet T., Gagnaire P.-A., 2021. Life tables drive genetic diversity in marine fishes. 
+> Barry P., Broquet T., Gagnaire P.-A., 2022. Age-specific survivorship and fecundity shape genetic diversity in marine fishess. Evolution letters 6-1:46-62.
 
 ## Sampling information
 
